@@ -1,0 +1,15 @@
+{
+  "short_name": "Klask Scoreboard",
+  "name": "Klask Scoreboard",
+  "icons": [
+    {
+      "src": "ihateyou.jpeg",
+      "type": "image/jpeg",
+      "sizes": "146x148"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
