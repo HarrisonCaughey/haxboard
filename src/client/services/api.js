@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const serverPath = process.env.NODE_ENV !== 'development' ? "https://klask-scoreboard.vercel.app" : 'http://localhost:3001';
+const serverPath = process.env.NODE_ENV !== 'development' ? "https://haxboard.vercel.app" : 'http://localhost:3001';
 
 export function getGames() {
     return axios.get(`${serverPath}/api/games`).then((games) => {

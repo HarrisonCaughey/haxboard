@@ -14,7 +14,7 @@ export class NavBar extends React.Component {
 
     getHost() {
         if (process.env.NODE_ENV !== 'development') {
-            return "https://klask-scoreboard.vercel.app/#"
+            return "https://haxboard.vercel.app/#"
         } else {
             return ""
         }
