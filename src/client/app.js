@@ -5,15 +5,7 @@ import "toastr/toastr.scss";
 import {Redirect, Route, Switch} from "react-router-dom";
 import {PlayerStats} from "./pages/player-stats";
 import {Home} from "./pages/home";
-// import { ReplayAnalyzer } from "./pages/replayer-analyzer"
-import stuff from "../replay-analyzer/index.html"
-const html = `<h1>stuff</h1>`
-
-// $.get("../replay-analyzer/index.html", "", function(data){
-//     alert('success : ' + data);
-// });
-
-const ReplayAnalyzer = () => <div dangerouslySetInnerHTML={{ __html: html }} />;
+import ReplayWrapper from "../replay-analyzer/src/App";
 
 export class App extends React.Component {
 
@@ -23,9 +15,9 @@ export class App extends React.Component {
 
     render() {
         return <div>
-            <NavBar/>
+            <NavBar className="navbar"/>
             <Switch>
-                <Route path="/record" component={ReplayAnalyzer}/>
+                <Route path="/record" component={ReplayWrapper}/>
                 <Route path="/stats" component={PlayerStats}/>
                 <Route exact path="/" component={Home}/>
                 <Redirect to={"/"} />
