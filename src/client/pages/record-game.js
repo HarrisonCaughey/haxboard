@@ -1,6 +1,6 @@
 import React from "react";
 import Select from "react-select";
-import {Col, Dropdown, Form, Row, Table} from "react-bootstrap";
+import {Col, Form, Row, Table} from "react-bootstrap";
 import {saveGame, getPlayers, updatePlayer} from "../services/api";
 import toastr from "toastr"
 
