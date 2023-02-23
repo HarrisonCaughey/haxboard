@@ -145,6 +145,7 @@ app.get('/api/playerGameStats', (req, res) => {
 
 app.post('/api/playerGameStats', (req, res) => {
     let player = req.body.playerGameStats
+    console.log(player)
     db('PlayerGameStats').insert(
         {
             game_id: player.game_id,

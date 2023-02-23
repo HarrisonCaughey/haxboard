@@ -7,7 +7,7 @@ let dbPlayers = {}
 export async function saveGames(file, games) {
 
     console.log(games)
-    let binaryId = -1
+    let binaryId = 1
     // saveBinaryFile(file).then ((res) => {
     //     binaryId = res.data
     // }).catch((error) => {
@@ -52,9 +52,8 @@ export async function saveGames(file, games) {
         }
 
         if (checkGameValidity(cleanGame)) {
-            console.log("saving game")
-            let gameId = await saveGame(cleanGame).catch((err) => console.log(err))
-            gameId = gameId[0].id
+            let result = await saveGame(cleanGame).catch((err) => console.log(err))
+            let gameId = result[0].id
             await savePlayerStats(gameId, playerStats)
             console.log(cleanGame)
             console.log(playerStats)
