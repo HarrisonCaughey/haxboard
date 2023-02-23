@@ -19,6 +19,8 @@ async function games(req, res) {
         let offset = (req.params.page - 1) * 10;
         let order = req.params.order;
         let direction = req.params.direction
+        console.log(req)
+        console.log(req.params)
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
