@@ -13,12 +13,12 @@ export async function saveGames(file, games) {
     //     console.log(error)
     // })
     //TODO POST FILE
-    getPseudonyms().then((res) => {
+    await getPseudonyms().then((res) => {
         pseuds = createPseudsMap(res.data)
         console.log(pseuds)
     })
 
-    getPlayers().then((res) => {
+    await getPlayers().then((res) => {
         dbPlayers = createPlayersMap(res.data)
         console.log(dbPlayers)
     })
