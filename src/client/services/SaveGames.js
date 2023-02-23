@@ -5,7 +5,6 @@ let dbPlayers = {}
 
 export async function saveGames(file, games) {
 
-    console.log("filtering...")
     console.log(games)
     let binaryId = -1
     saveBinaryFile(file).then ((res) => {
@@ -16,10 +15,12 @@ export async function saveGames(file, games) {
     //TODO POST FILE
     getPseudonyms().then((res) => {
         pseuds = res.data
+        console.log("pseuds " + pseuds)
     })
 
     getPlayers().then((res) => {
         dbPlayers = res.data
+        console.log("dbPlayers " + dbPlayers)
     })
 
     for (const game of games) {
@@ -52,10 +53,9 @@ export async function saveGames(file, games) {
         if (checkGameValidity(cleanGame)) {
             let gameId = await saveGame(cleanGame)
             await savePlayerStats(gameId, playerStats)
-
+            console.log(cleanGame)
+            console.log(playerStats)
         }
-        console.log(cleanGame)
-        console.log(playerStats)
     }
 }
 
@@ -88,11 +88,11 @@ function checkGameValidity(game) {
     if (game.red_score > 5 || game.blue_score > 5) return false;
 
     //player check
-    if (game.redTeam.length !== game.blueTeam.length) return false;
+    if (game.red_team.length !== game.blue_team.length) return false;
 
-    const playersPlayedList = game.redTeam.concat(game.blueTeam);
+    const playersPlayedList = game.red_team.concat(game.blue_team);
     const playersPlayedSet = new Set(playersPlayedList);
-    if (playersPlayedList.length !== playersPlayedSet.length) return false;
+    if (playersPlayedList.length !== playersPlayedSet.size) return false;
 
     return true
 }
@@ -148,7 +148,6 @@ function processPlayerStats(game) {
         game.player[i].id = pseuds[game.player[i].nick] ? pseuds[game.player[i].nick] : -1
         var pr = game.player[i], prGoals = 0, prAssists = 0, prKicks = 0, prPasses = 0, prShots = 0;
 
-        console.log(pr)
         for (var j = 0; j < game.goals.length; j++) {
             if (game.goals[j].scorer === pr.nick) prGoals++;
             else if (game.goals[j].assist === pr.nick) prAssists++;
@@ -169,7 +168,6 @@ function processPlayerStats(game) {
             gameStats.push(plyr);
         }
     }
-    console.log(gameStats)
     return gameStats
 }
 
