@@ -10,6 +10,8 @@ export async function saveGames(file, games) {
     let binaryId = -1
     saveBinaryFile(file).then ((res) => {
         binaryId = res.data
+    }).catch((error) => {
+        console.log(error)
     })
     //TODO POST FILE
     getPseudonyms().then((res) => {
@@ -157,9 +159,9 @@ function processPlayerStats(game) {
         if (!game.spaceMode) {
             let won = true
             if (game.scoreRed > game.scoreBlue) {
-                if (game.blueTeam.contains(pr.nick)) won = false;
+                if (game.blueTeam.includes(pr.nick)) won = false;
             } else {
-                if (game.redTeam.contains(pr.nick)) won = false;
+                if (game.redTeam.includes(pr.nick)) won = false;
             }
             const plyr = {
                 id: pr.id, nick: pr.nick, goals: prGoals, assists: prAssists, kicks: prKicks, passes: prPasses, shots: prShots, won: won
