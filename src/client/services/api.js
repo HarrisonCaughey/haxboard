@@ -38,3 +38,40 @@ export function updatePlayer(player, id) {
                 console.error(err);
             })
 }
+
+export function getPlayerGameStats() {
+    return axios.get(`${serverPath}/api/playerGameStats`).then((stats) => {
+        return stats;
+    }).catch((err) => {
+        console.error(err);
+    })
+}
+
+export function savePlayerGameStats(playerGameStats) {
+    return axios.post(`${serverPath}/api/playerGameStats`, {playerGameStats: playerGameStats})
+        .catch((err) => {
+            console.error(err);
+        })
+}
+
+export function deletePlayerGameStats(gameId, playerId) {
+    return axios.delete(`${serverPath}/api/playerGameStats`, {data : {game_id: gameId, player_id: playerId}})
+        .catch((err) => {
+            console.error(err);
+        })
+}
+
+export function getPseudonyms() {
+    return axios.get(`${serverPath}/api/pseudonyms`).then((pseudonyms) => {
+        return pseudonyms;
+    }).catch((err) => {
+        console.error(err);
+    })
+}
+
+export function updatePseudonyms(pseudonyms, id) {
+    return axios.put(`${serverPath}/api/pseudonyms`, {pseudonyms: pseudonyms, id: id})
+        .catch((err) => {
+            console.error(err);
+        })
+}

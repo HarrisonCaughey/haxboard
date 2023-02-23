@@ -30,29 +30,6 @@ async function players(req, res) {
                         }
                     })
         })
-    } else if (req.method === 'POST') {
-        pool.connect((err, client, done) => {
-            if (err) throw err
-            let player = req.body.player;
-            client.query(
-                'INSERT INTO public."Players" ' +
-                '(name, games_played, games_won, elo, mvps, goals, assists, kicks, ' +
-                'passes, shots_on_goal, own_goals) ' +
-                'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); ' +
-                'SELECT SCOPE_IDENTITY();',
-                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
-                player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals],
-                (err, data) => {
-                    done()
-                    if (err) {
-                        console.log(err.stack)
-                        res.status(500).message(err)
-                    } else {
-                        console.log("Player information updated")
-                        res.status(204).json(data.rows)
-                    }
-                })
-        })
     } else if (req.method === 'PUT') {
         pool.connect((err, client, done) => {
             if (err) throw err
@@ -73,6 +50,29 @@ async function players(req, res) {
                     } else {
                         console.log("Player information updated")
                         res.send(204)
+                    }
+                })
+        })
+    } else if (req.method === 'POST') {
+        pool.connect((err, client, done) => {
+            if (err) throw err
+            let player = req.body.player;
+            client.query(
+                'INSERT INTO public."Players" ' +
+                '(name, games_played, games_won, elo, mvps, goals, assists, kicks, ' +
+                'passes, shots_on_goal, own_goals) ' +
+                'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); ' +
+                'SELECT SCOPE_IDENTITY();',
+                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
+                    player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals],
+                (err, data) => {
+                    done()
+                    if (err) {
+                        console.log(err.stack)
+                        res.status(500).message(err)
+                    } else {
+                        console.log("Player information updated")
+                        res.status(204).json(data.rows)
                     }
                 })
         })
