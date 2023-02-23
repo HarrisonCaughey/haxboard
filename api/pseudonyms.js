@@ -53,4 +53,4 @@ async function pseudonyms(req, res) {
     }
 }
 
-export default gameStats;
+export default pseudonyms;

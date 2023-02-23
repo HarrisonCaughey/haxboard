@@ -15,17 +15,21 @@ pool.on('error', (err, client) => {
 
 async function games(req, res) {
     console.log("api/games endpoint hit in serverless function")
+    console.log(req)
     if (req.method === 'GET') {
-        let offset = req.body.page ? (req.body.page - 1) * 10 : 0;
-        let order = req.body.order ? req.body.order : "date";
+        let offset = (req.params.page - 1) * 10;
+        let order = req.params.order;
+        let direction = req.params.direction
+        console.log(req)
+        console.log(req.params)
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
-                'SELECT Games.id, Games.date, Games.team1_score, Games.team2_score, Games.team1_possession, Games.team2_possession, ' +
-                'Games.game_time, Games.team1, Games.team2 ' +
-                'FROM public."Games" as Games ' +
-                'ORDER BY $1 ' +
-                'OFFSET $2 LIMIT 10 ', [order, offset], (err, data) => {
+                'SELECT * ' +
+                'FROM public."Games" ' +
+                "ORDER BY (case when $2 = 'ASC' then $1 end) ASC, " +
+                "(case when $2 = 'DESC' then $1 end) DESC " +
+                'OFFSET $3 LIMIT 10 ', [order, direction, offset], (err, data) => {
                 done()
                 if (err) {
                     console.log(err.stack)
@@ -40,10 +44,11 @@ async function games(req, res) {
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query('INSERT INTO public."Games" (team1, team2, team1_score, team2_score, ' +
-                    'team1_possession, team2_possession, date, game_time, binary) '
-                    + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+                    'team1_possession, team2_possession, date, game_time, binary_id) ' +
+                    'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9); ' +
+                    'SELECT SCOPE_IDENTITY();',
                     [game.team1, game.team2, game.team1_score, game.team2_score, game.team1_possession,
-                    game.team2_possession, game.date, game.game_time, game.binary],
+                    game.team2_possession, game.date, game.game_time, game.binary_id],
                     (err, data) => {
                     done()
                     if (err) {
@@ -52,7 +57,7 @@ async function games(req, res) {
                     }
                     else {
                         console.log("Game entered into the database")
-                        res.send(200)
+                        res.status(200).json(data.rows)
                     }
                 })
         })

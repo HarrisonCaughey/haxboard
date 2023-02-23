@@ -21,37 +21,16 @@ export class PlayerStats extends React.Component {
                     headerName: 'Win/Loss Ratio',
                     width: 150,
                     valueGetter: (params) =>
-                            `${this.getWinLossRational(params.row.games_won, params.row.games_lost)}%`,
+                            `${this.getWinLossRational(params.row.games_won, params.row.games_played)}%`,
                     sortComparator: this.percentageComparator,
                 },
-                {
-                    field: 'round_wlr',
-                    headerName: 'Rounds WLR',
-                    width: 150,
-                    valueGetter: (params) =>
-                            `${this.getWinLossRational(params.row.rounds_won, params.row.rounds_lost)}%`,
-                    sortComparator: this.percentageComparator,
-                },
-                {
-                    field: 'point_wlr',
-                    headerName: 'Points WLR',
-                    width: 150,
-                    valueGetter: (params) =>
-                            `${this.getWinLossRational(params.row.points_won, params.row.points_lost)}%`,
-                    sortComparator: this.percentageComparator,
-                },
-                { field: 'games_won', headerName: 'Wins', width: 100 },
-                { field: 'games_lost', headerName: 'Losses', width: 100 },
-                {
-                    field: 'games_played',
-                    headerName: 'Games Played',
-                    width: 140,
-                    valueGetter: (params) => params.row.games_won + params.row.games_lost
-                },
-                { field: 'points_won', headerName: 'Points Won', width: 100 },
-                { field: 'points_lost', headerName: 'Points Lost', width: 100 },
-                { field: 'rounds_won', headerName: 'Rounds Won', width: 100 },
-                { field: 'rounds_lost', headerName: 'Rounds Lost', width: 100 },
+                { field: 'games_played', headerName: 'Games Played', width: 100 },
+                { field: 'goals', headerName: 'Goals', width: 100 },
+                { field: 'assists', headerName: 'Assists', width: 100 },
+                { field: 'kicks', headerName: 'Kicks', width: 100 },
+                { field: 'passes', headerName: 'Passes', width: 100 },
+                { field: 'own_goals', headerName: 'Own Goals', width: 100 },
+                { field: 'shots_on_goal', headerName: 'Shots on Goal', width: 100 },
             ]
         }
     }
@@ -90,10 +69,10 @@ export class PlayerStats extends React.Component {
         this.setState({players: players})
     }
 
-    getWinLossRational(won, lost) {
+    getWinLossRational(won, played) {
         let wlr = 0
         if (won !== 0) {
-            wlr = (100 * won) / (won + lost)
+            wlr = (100 * won) / (played)
         }
         return wlr.toFixed(2)
     }
