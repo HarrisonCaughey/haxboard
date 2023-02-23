@@ -732,21 +732,16 @@ export function handleFile(e) {
   var c = this;
   console.log(e.target.files)
   var a = e.target.files;
-  analyzeFile(a)
-}
-
-export function analyzeFile(file) {
-  if (!(1 > file.length)) {
-    var a = file.item(0),
-        b = new FileReader;
-    gamesFile = file
+  if (!(1 > a.length)) {
+    var a = a.item(0),
+      b = new FileReader;
+    gamesFile = a
     b.onload = function () {
       y.i(parseReplay, b.result)
     };
-    b.readAsArrayBuffer(file)
+    b.readAsArrayBuffer(a)
   }
-}
-
+};
 function parseReplay(a) {
   u.po(a)
 }
