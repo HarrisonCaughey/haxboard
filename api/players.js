@@ -19,7 +19,7 @@ async function players(req, res) {
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
-                    'SELECT * FROM public."Player"', (err, data) => {
+                    'SELECT * FROM public."Players"', (err, data) => {
                         done()
                         if (err) {
                             console.log(err.stack)
@@ -36,11 +36,12 @@ async function players(req, res) {
             let player = req.body.player;
             let id = req.body.id;
             client.query(
-                    'UPDATE public."Player" ' +
-                    'SET games_won=$1, games_lost=$2, rounds_won=$3, rounds_lost=$4, points_won=$5, points_lost=$6, game_history=$7 ' +
-                    'WHERE id = $8;',
-                    [player.games_won, player.games_lost, player.rounds_won, player.rounds_lost,
-                    player.points_won, player.points_lost, player.game_history, id],
+                    'UPDATE public."Players" ' +
+                    'SET name=$1, games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
+                    'passes=$9, shots_on_goal=$10, own_goals=$11 ' +
+                    'WHERE id = $12;',
+                    [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
+                    player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals, id],
                     (err, data) => {
                         done()
                         if (err) {
@@ -56,27 +57,5 @@ async function players(req, res) {
         res.status(400).send("Method not allowed");
     }
 }
-
-// async function getPlayers(client) {
-//     console.log("Getting players")
-//     return await client.query('SELECT * FROM public."Player"', (err, res) => {
-//         return res
-//     }).catch(err => {
-//         console.log(err)
-//     });
-// }
-//
-// async function putPlayer(player, id, client) {
-//     await client.connect();
-//     return await client.query('UPDATE public."Player" ' +
-//             'SET games_won=$1, games_lost=$2, rounds_won=$3, rounds_lost=$4, points_won=$5, points_lost=$6, game_history=$7 ' +
-//             'WHERE id = $8;',
-//             [player.games_won, player.games_lost, player.rounds_won, player.rounds_lost,
-//             player.points_won, player.points_lost, player.game_history, id], (err, res) => {
-//         console.log('Posted game, got response:')
-//         console.log(res)
-//         return res
-//     })
-// }
 
 export default players;

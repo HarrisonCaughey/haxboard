@@ -13,19 +13,17 @@ pool.on('error', (err, client) => {
     process.exit(-1)
 })
 
-async function games(req, res) {
-    console.log("api/games endpoint hit in serverless function")
+async function playerGameStats(req, res) {
+    console.log("api/playerGameStats endpoint hit in serverless function")
     if (req.method === 'GET') {
-        let offset = req.body.page ? (req.body.page - 1) * 10 : 0;
-        let order = req.body.order ? req.body.order : "date";
+        let playerId = req.body.player_id;
+        let gameId = req.body.game_id
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
-                'SELECT Games.id, Games.date, Games.team1_score, Games.team2_score, Games.team1_possession, Games.team2_possession, ' +
-                'Games.game_time, Games.team1, Games.team2 ' +
-                'FROM public."Games" as Games ' +
-                'ORDER BY $1 ' +
-                'OFFSET $2 LIMIT 10 ', [order, offset], (err, data) => {
+                'SELECT * ' +
+                'FROM public."PlayerGameStats" ' +
+                'WHERE game_id = $1 AND player_id = $2', [gameId, playerId], (err, data) => {
                 done()
                 if (err) {
                     console.log(err.stack)
@@ -36,14 +34,14 @@ async function games(req, res) {
             })
         })
     } else if (req.method === 'POST') {
-        let game = req.body.game
+        let stats = req.body.playerGameStats
         pool.connect((err, client, done) => {
             if (err) throw err
-            client.query('INSERT INTO public."Games" (team1, team2, team1_score, team2_score, ' +
-                    'team1_possession, team2_possession, date, game_time, binary) '
+            client.query('INSERT INTO public."PlayerGameStats" (game_id, player_id, goals, assists, ' +
+                    'kicks, passes, shots_on_goal, own_goals, won) '
                     + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-                    [game.team1, game.team2, game.team1_score, game.team2_score, game.team1_possession,
-                    game.team2_possession, game.date, game.game_time, game.binary],
+                    [stats.game_id, stats.player_id, stats.goals, stats.assists, stats.kicks,
+                    stats.passes, stats.shots_on_goal, stats.own_goals, stats.won],
                     (err, data) => {
                     done()
                     if (err) {
@@ -51,17 +49,18 @@ async function games(req, res) {
                         res.status(500).message(err)
                     }
                     else {
-                        console.log("Game entered into the database")
+                        console.log("Game stats entered into the database")
                         res.send(200)
                     }
                 })
         })
     } else if (req.method === 'DELETE') {
-        let id = req.body.id
+        let gameId = req.body.game_id
+        let playerId = req.body.player_id
         pool.connect((err, client, done) => {
             if (err) throw err
-            client.query('DELETE FROM public."Games" WHERE id=$1',
-                    [id],
+            client.query('DELETE FROM public."PlayerGameStats" WHERE game_id=$1 AND player_id=$2',
+                    [gameId, playerId],
                     (err, data) => {
                         done()
                         if (err) {
@@ -69,7 +68,7 @@ async function games(req, res) {
                             res.status(500).message(err)
                         }
                         else {
-                            console.log("Game from the database")
+                            console.log("Deleted game stats from the database")
                             res.send(200)
                         }
                     })
@@ -79,4 +78,4 @@ async function games(req, res) {
     }
 }
 
-export default games;
+export default playerGameStats;
