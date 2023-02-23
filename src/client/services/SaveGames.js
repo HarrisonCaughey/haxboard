@@ -7,20 +7,20 @@ export async function saveGames(file, games) {
 
     console.log(games)
     let binaryId = -1
-    saveBinaryFile(file).then ((res) => {
-        binaryId = res.data
-    }).catch((error) => {
-        console.log(error)
-    })
+    // saveBinaryFile(file).then ((res) => {
+    //     binaryId = res.data
+    // }).catch((error) => {
+    //     console.log(error)
+    // })
     //TODO POST FILE
     getPseudonyms().then((res) => {
-        pseuds = res.data
-        pseuds.forEach(pseud => console.log(pseud))
+        pseuds = createPseudsMap(res.data)
+        console.log(pseuds)
     })
 
     getPlayers().then((res) => {
-        dbPlayers = res.data
-        dbPlayers.forEach(player => console.log(player))
+        dbPlayers = createPlayersMap(res.data)
+        console.log(dbPlayers)
     })
 
     for (const game of games) {
@@ -171,4 +171,18 @@ function processPlayerStats(game) {
     return gameStats
 }
 
+function createPseudsMap(data) {
+    let map = {};
+    data.forEach((pseud) => {
+        map[pseud.pseudonym] = pseud.player_id
+    })
+    return map;
+}
 
+function createPlayersMap(data) {
+    let map = {};
+    data.forEach((player) => {
+        map[player.id] = player
+    })
+    return map;
+}
