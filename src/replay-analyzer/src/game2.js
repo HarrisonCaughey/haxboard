@@ -727,20 +727,26 @@ function $a(a) {
   this.nd = a.get('notice-close');
   this.Il()
 }
+
 export function handleFile(e) {
   var c = this;
   console.log(e.target.files)
   var a = e.target.files;
-  if (!(1 > a.length)) {
-    var a = a.item(0),
-      b = new FileReader;
-    gamesFile = a
+  analyzeFile(a)
+}
+
+export function analyzeFile(file) {
+  if (!(1 > file.length)) {
+    var a = file.item(0),
+        b = new FileReader;
+    gamesFile = file
     b.onload = function () {
       y.i(parseReplay, b.result)
     };
-    b.readAsArrayBuffer(a)
+    b.readAsArrayBuffer(file)
   }
-};
+}
+
 function parseReplay(a) {
   u.po(a)
 }
