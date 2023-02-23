@@ -1,11 +1,26 @@
-export function saveGames(file, games) {
+import {getPlayers, getPseudonyms, saveBinaryFile, saveGame, savePlayerGameStats, updatePlayer} from "./api";
+
+let pseuds = {}
+let dbPlayers = {}
+
+export async function saveGames(file, games) {
 
     console.log("filtering...")
     console.log(games)
+    let binaryId = -1
+    saveBinaryFile(file).then ((res) => {
+        binaryId = res.data
+    })
+    //TODO POST FILE
+    getPseudonyms().then((res) => {
+        pseuds = res.data
+    })
 
-    // POST FILE
+    getPlayers().then((res) => {
+        dbPlayers = res.data
+    })
 
-    games.forEach( game => {
+    for (const game of games) {
         let playerStats = processPlayerStats(game)
 
         //filter out from game and gamestats non-playing players  ////////////////////////////
@@ -19,44 +34,56 @@ export function saveGames(file, games) {
         playerStats = playerStats.filter(player => player.kicks >= 5)
 
         ////////////////////////////////////////////////////////////////////////////////////
-        game.redTeamPossession = (game.possRed / (game.possRed + game.possBlue) * 100).toFixed(1)
-        game.blueTeamPossession = (game.possBlue / (game.possRed + game.possBlue) * 100).toFixed(1)
 
         let cleanGame = {
-            redTeamScore: game.scoreRed,
-            blueTeamScore: game.scoreBlue,
-            redTeamPossession:(game.possRed / (game.possRed + game.possBlue) * 100).toFixed(1),
-            blueTeamPossession: (game.possBlue / (game.possRed + game.possBlue) * 100).toFixed(1),
-            gameTime: (game.gameTicks/60).toFixed(),
-            redTeam: game.redTeam,
-            blueTeam: game.blueTeam,
+            red_score: game.scoreRed,
+            blue_score: game.scoreBlue,
+            red_possession: (game.possRed / (game.possRed + game.possBlue) * 100).toFixed(1),
+            blue_possession: (game.possBlue / (game.possRed + game.possBlue) * 100).toFixed(1),
+            game_time: (game.gameTicks / 60).toFixed(),
+            red_team: getPseuds(game.redTeam),
+            blue_team: getPseuds(game.blueTeam),
             date: getDateFromFile(file),
-            fileId: 0o0000000000000000000000000000
+            binary_id: binaryId
         }
 
         if (checkGameValidity(cleanGame)) {
-            // POST GAME
-            //POST GAME STATS
-            //PUT PLAYER
+            let gameId = await saveGame(cleanGame)
+            await savePlayerStats(gameId, playerStats)
+
         }
         console.log(cleanGame)
-    })
+        console.log(playerStats)
+    }
 }
+
+function getPseuds(listOfNicks) {
+    let listOfIds = []
+    listOfNicks.forEach(nick => {
+        if (pseuds[nick] !== undefined) {
+            listOfIds.push(pseuds[nick])
+        } else {
+            //TODO notify if doestn exist in pseuds
+        }
+    })
+    return listOfIds
+}
+
 
 function getDateFromFile(file) {
     var fileName = file.name;
-    var date = new Date()
-    console.log(fileName); // HBReplay-2023-02-15-14h22m.hbr2
     return new Date(fileName.slice(fileName.indexOf("-")+1, fileName.lastIndexOf("-")));
 }
 
+
+
 function checkGameValidity(game) {
     // score check
-    if (game.redTeamScore === game.blueTeamScore) return false;
+    if (game.red_score === game.blue_score) return false;
 
-    if (game.redTeamScore < 3 && game.blueTeamScore < 3) return false;
+    if (game.red_score < 3 && game.blue_score < 3) return false;
 
-    if (game.redTeamScore > 5 || game.blueTeamScore > 5) return false;
+    if (game.red_score > 5 || game.blue_score > 5) return false;
 
     //player check
     if (game.redTeam.length !== game.blueTeam.length) return false;
@@ -68,10 +95,55 @@ function checkGameValidity(game) {
     return true
 }
 
+function calculateElo() {
+    return 0
+}
+
+function calculateMvp() {
+    return 0;
+}
+
+function calculateOwnGoals() {
+    return 0;
+}
+
+async function savePlayerStats(gameId, playerStats) {
+    for (const player of playerStats) {
+        let cleanPlayerGamestats = {
+            game_id: gameId,
+            player_id: player.id,
+            goals: player.goals,
+            assists: player.assists,
+            kicks: player.kicks,
+            passes: player.passes,
+            shots_on_goal: player.shots,
+            own_goals: 0,
+            won: player.won
+        }
+
+        await savePlayerGameStats(cleanPlayerGamestats)
+
+        let oldPlayer = dbPlayers[player.id]
+        let updatedPlayer = {
+            games_played: oldPlayer.games_played + 1,
+            games_won: player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won,
+            elo: oldPlayer.elo + calculateElo(),
+            mvps: oldPlayer.mvps + calculateMvp(),
+            goals: oldPlayer.goals + cleanPlayerGamestats.goals,
+            assists: oldPlayer.assists + cleanPlayerGamestats.assists,
+            kicks: oldPlayer.kicks + cleanPlayerGamestats.kicks,
+            passes: oldPlayer.passes + cleanPlayerGamestats.passes,
+            shots_on_goal: oldPlayer.shots_on_goal + cleanPlayerGamestats.shots_on_goal,
+            own_goals: oldPlayer.own_goals + calculateOwnGoals()
+        }
+        await updatePlayer(updatedPlayer, player.id)
+    }
+}
+
 function processPlayerStats(game) {
     var gameStats = []
     for (var i = 0; i < game.player.length; i++) {
-
+        game.player[i].id = pseuds[game.player[i].nick] ? pseuds[game.player[i].nick] : -1
         var pr = game.player[i], prGoals = 0, prAssists = 0, prKicks = 0, prPasses = 0, prShots = 0;
 
         console.log(pr)
@@ -83,8 +155,14 @@ function processPlayerStats(game) {
         for (var j = 0; j < game.passes.length; j++) if (game.passes[j] === pr.nick) prPasses++;
         for (var j = 0; j < game.shots.length; j++) if (game.shots[j] === pr.nick) prShots++;
         if (!game.spaceMode) {
+            let won = true
+            if (game.scoreRed > game.scoreBlue) {
+                if (game.blueTeam.contains(pr.nick)) won = false;
+            } else {
+                if (game.redTeam.contains(pr.nick)) won = false;
+            }
             const plyr = {
-                nick: pr.nick, goals: prGoals, assists: prAssists, kicks: prKicks, passes: prPasses, shots: prShots,
+                id: pr.id, nick: pr.nick, goals: prGoals, assists: prAssists, kicks: prKicks, passes: prPasses, shots: prShots, won: won
             };
             gameStats.push(plyr);
         }

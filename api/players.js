@@ -37,10 +37,10 @@ async function players(req, res) {
             let id = req.body.id;
             client.query(
                 'UPDATE public."Players" ' +
-                'SET name=$1, games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
+                'SET games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
                 'passes=$9, shots_on_goal=$10, own_goals=$11 ' +
                 'WHERE id = $12;',
-                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
+                [player.games_played, player.games_won, player.elo, player.mvps, player.goals,
                     player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals, id],
                 (err, data) => {
                     done()
