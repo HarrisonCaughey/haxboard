@@ -38,8 +38,8 @@ async function playerGameStats(req, res) {
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query('INSERT INTO public."PlayerGameStats" (game_id, player_id, goals, assists, ' +
-                    'kicks, passes, shots_on_goal, own_goals, won) '
-                    + 'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+                    'kicks, passes, shots_on_goal, own_goals, won) ' +
+                    'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);',
                     [stats.game_id, stats.player_id, stats.goals, stats.assists, stats.kicks,
                     stats.passes, stats.shots_on_goal, stats.own_goals, stats.won],
                     (err, data) => {

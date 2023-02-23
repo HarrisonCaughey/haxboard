@@ -30,28 +30,51 @@ async function players(req, res) {
                         }
                     })
         })
+    } else if (req.method === 'POST') {
+        pool.connect((err, client, done) => {
+            if (err) throw err
+            let player = req.body.player;
+            client.query(
+                'INSERT INTO public."Players" ' +
+                '(name, games_played, games_won, elo, mvps, goals, assists, kicks, ' +
+                'passes, shots_on_goal, own_goals) ' +
+                'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); ' +
+                'SELECT SCOPE_IDENTITY();',
+                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
+                player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals],
+                (err, data) => {
+                    done()
+                    if (err) {
+                        console.log(err.stack)
+                        res.status(500).message(err)
+                    } else {
+                        console.log("Player information updated")
+                        res.status(204).json(data.rows)
+                    }
+                })
+        })
     } else if (req.method === 'PUT') {
         pool.connect((err, client, done) => {
             if (err) throw err
             let player = req.body.player;
             let id = req.body.id;
             client.query(
-                    'UPDATE public."Players" ' +
-                    'SET name=$1, games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
-                    'passes=$9, shots_on_goal=$10, own_goals=$11 ' +
-                    'WHERE id = $12;',
-                    [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
+                'UPDATE public."Players" ' +
+                'SET name=$1, games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
+                'passes=$9, shots_on_goal=$10, own_goals=$11 ' +
+                'WHERE id = $12;',
+                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
                     player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals, id],
-                    (err, data) => {
-                        done()
-                        if (err) {
-                            console.log(err.stack)
-                            res.status(500).message(err)
-                        } else {
-                            console.log("Player information updated")
-                            res.send(204)
-                        }
-                    })
+                (err, data) => {
+                    done()
+                    if (err) {
+                        console.log(err.stack)
+                        res.status(500).message(err)
+                    } else {
+                        console.log("Player information updated")
+                        res.send(204)
+                    }
+                })
         })
     } else {
         res.status(400).send("Method not allowed");
