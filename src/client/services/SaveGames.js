@@ -1,4 +1,5 @@
 import {getPlayers, getPseudonyms, saveBinaryFile, saveGame, savePlayerGameStats, updatePlayer} from "./api";
+import {handleFile} from "../../replay-analyzer/src/game2";
 
 let pseuds = {}
 let dbPlayers = {}
@@ -51,7 +52,9 @@ export async function saveGames(file, games) {
         }
 
         if (checkGameValidity(cleanGame)) {
+            console.log("saving game")
             let gameId = await saveGame(cleanGame).catch((err) => console.log(err))
+            gameId = gameId[0].id
             await savePlayerStats(gameId, playerStats)
             console.log(cleanGame)
             console.log(playerStats)
@@ -188,4 +191,10 @@ function createPlayersMap(data) {
         map[player.id] = player
     })
     return map;
+}
+
+function handleFiles(files) {
+    files.forEach((file) => {
+        handleFile(file)
+    })
 }
