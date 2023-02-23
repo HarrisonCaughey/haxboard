@@ -25,6 +25,7 @@ function PlayerStats() {
       tab.push([pr.nick, pr.nation, prGoals, prAssists, prKicks, prPasses, prShots, prBumps, prTouches]);
     } else tab.push([pr.nick, pr.nation, prGoals, prAssists, prKicks, prPasses, prShots]);
   }
+  //filtering by column logic
   if (par > 0) {
     var tab2 = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
     for (var i = 0; i < tab.length; i++) {

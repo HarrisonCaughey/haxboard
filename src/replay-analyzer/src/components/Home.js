@@ -66,16 +66,12 @@ function Home() {
     <>
       <div className='roomlist-view' style={{ zIndex: 5 }}>
         <div className='dialog'>
-          <h1>Haxball Replay Analyzer v{version}</h1>
-          <p>Contact: <br />Discord: Falafel#3895, you can find me at discord.io/haxracing<br />turbofalafel@gmail.com</p>
           <div className='file-btn'>
             <label htmlFor='replayfile'>
               <span style={{ float: 'left' }}>►</span>
               <span style={{ float: 'center' }}>Load replay</span>
             </label>
             <input id='replayfile' type='file' accept='.hbr2' data-hook='replayfile' onChange={handleChange} />
-            <br /><br />
-            <Changelog />
           </div>
         </div>
       </div>

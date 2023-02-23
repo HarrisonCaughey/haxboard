@@ -9,7 +9,7 @@ import $ from "jquery";
 import {ELO_VOLATILITY} from "../constants/pages";
 
 
-export class Home extends React.Component {
+export class GameHistory extends React.Component {
 
     constructor(props) {
         super(props);
@@ -21,7 +21,6 @@ export class Home extends React.Component {
         this.state = {
             games: [],
             players: null,
-            admin: false,
             columns: [
                 { field: 'players', headerName: 'Players', width: 200, sortable: false },
                 { field: 'winner', headerName: 'Winner', width: 120 },

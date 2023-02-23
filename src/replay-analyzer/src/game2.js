@@ -18,8 +18,10 @@
 import $ from 'jquery';
 import './vendor/pako-jszip.min.js';
 import { showStats, setGameStats, dispatchPlayerList, dispatchPlayerPos } from './components/Home';
+import {saveGames} from "../../client/services/SaveGames";
 
 var loading = {};
+var gamesFile = null
 
 function newReplay() {
   loading = {
@@ -727,10 +729,12 @@ function $a(a) {
 }
 export function handleFile(e) {
   var c = this;
+  console.log(e.target.files)
   var a = e.target.files;
   if (!(1 > a.length)) {
     var a = a.item(0),
       b = new FileReader;
+    gamesFile = a
     b.onload = function () {
       y.i(parseReplay, b.result)
     };
@@ -1250,7 +1254,8 @@ function ja(a) {
     b.bb(a.g)
   };
   a.get('staty').onclick = function (el) {
-
+    console.log("martin")
+    console.log(match)
     setGameStats(match);
     showStats(el.target);
 
@@ -4509,6 +4514,9 @@ xa.prototype = C(V.prototype, {
         dispatchPlayerList(playerList);
         dispatchPlayerPos(playerPos)
         bringReplayer();
+        //TODO here we send the match/(s)
+
+        saveGames(gamesFile, match)
       } else if (progress !== loading.progress) {
         loading.progress = progress;
         loading.changed = true;

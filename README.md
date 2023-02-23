@@ -20,3 +20,12 @@ You may also see any lint errors in the console.
 ### `npm run server`
 
 Launches the development server residing in haxboard/src/server.\
+
+
+
+TODO
+- API calls to db 
+GET: /gamestats, /players /games /pseudonyms 
+POST: /gamestats /players /games /pseudonyms
+- logic for elo
+- 

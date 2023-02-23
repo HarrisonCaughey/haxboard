@@ -15,13 +15,10 @@ pool.on('error', (err, client) => {
 
 async function games(req, res) {
     console.log("api/games endpoint hit in serverless function")
-    console.log(req)
     if (req.method === 'GET') {
-        let offset = (req.params.page - 1) * 10;
-        let order = req.params.order;
-        let direction = req.params.direction
-        console.log(req)
-        console.log(req.params)
+        let offset = (req.query.page - 1) * 10;
+        let order = req.query.order;
+        let direction = req.query.direction
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
@@ -43,12 +40,12 @@ async function games(req, res) {
         let game = req.body.game
         pool.connect((err, client, done) => {
             if (err) throw err
-            client.query('INSERT INTO public."Games" (team1, team2, team1_score, team2_score, ' +
-                    'team1_possession, team2_possession, date, game_time, binary_id) ' +
+            client.query('INSERT INTO public."Games" (red_team, blue_team, red_score, blue_score, ' +
+                    'red_possession, blue_possession, date, game_time, binary_id) ' +
                     'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9); ' +
                     'SELECT SCOPE_IDENTITY();',
-                    [game.team1, game.team2, game.team1_score, game.team2_score, game.team1_possession,
-                    game.team2_possession, game.date, game.game_time, game.binary_id],
+                    [game.red_team, game.blue_team, game.red_score, game.blue_score, game.red_possession,
+                    game.blue_possession, game.date, game.game_time, game.binary_id],
                     (err, data) => {
                     done()
                     if (err) {

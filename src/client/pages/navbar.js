@@ -30,7 +30,6 @@ export class NavBar extends React.Component {
                     <Nav className="me-auto">
                         <Nav.Link draggable={false} href={`${this.getHost()}/`}>Game History</Nav.Link>
                         <Nav.Link draggable={false} href={`${this.getHost()}/record`}>Record Results</Nav.Link>
-                        {/*<Nav.Link draggable={false} href={`${this.getHost()}/scoreboard`}>Scoreboard</Nav.Link>*/}
                         <Nav.Link draggable={false} href={`${this.getHost()}/stats`}>Player Stats</Nav.Link>
                     </Nav>
                 </Container>
