@@ -16,8 +16,8 @@ pool.on('error', (err, client) => {
 async function playerGameStats(req, res) {
     console.log("api/playerGameStats endpoint hit in serverless function")
     if (req.method === 'GET') {
-        let playerId = req.body.player_id;
-        let gameId = req.body.game_id
+        let playerId = req.params.player_id;
+        let gameId = req.params.game_id
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(

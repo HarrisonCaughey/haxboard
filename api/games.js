@@ -16,8 +16,8 @@ pool.on('error', (err, client) => {
 async function games(req, res) {
     console.log("api/games endpoint hit in serverless function")
     if (req.method === 'GET') {
-        let offset = req.body.page ? (req.body.page - 1) * 10 : 0;
-        let order = req.body.order ? req.body.order : "date";
+        let offset = (req.params.page - 1) * 10;
+        let order = req.params.order;
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
