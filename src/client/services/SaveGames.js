@@ -15,12 +15,12 @@ export async function saveGames(file, games) {
     //TODO POST FILE
     getPseudonyms().then((res) => {
         pseuds = res.data
-        console.log("pseuds " + pseuds)
+        pseuds.forEach(pseud => console.log(pseud))
     })
 
     getPlayers().then((res) => {
         dbPlayers = res.data
-        console.log("dbPlayers " + dbPlayers)
+        dbPlayers.forEach(player => console.log(player))
     })
 
     for (const game of games) {
@@ -51,7 +51,7 @@ export async function saveGames(file, games) {
         }
 
         if (checkGameValidity(cleanGame)) {
-            let gameId = await saveGame(cleanGame)
+            let gameId = await saveGame(cleanGame).catch((err) => console.log(err))
             await savePlayerStats(gameId, playerStats)
             console.log(cleanGame)
             console.log(playerStats)
@@ -123,9 +123,9 @@ async function savePlayerStats(gameId, playerStats) {
             won: player.won
         }
 
-        await savePlayerGameStats(cleanPlayerGamestats)
+        await savePlayerGameStats(cleanPlayerGamestats).catch((err) => console.log(err))
 
-        let oldPlayer = dbPlayers[player.id]
+        let oldPlayer = dbPlayers[player.id] // TODO dbPlayers???
         let updatedPlayer = {
             games_played: oldPlayer.games_played + 1,
             games_won: player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won,
@@ -138,7 +138,7 @@ async function savePlayerStats(gameId, playerStats) {
             shots_on_goal: oldPlayer.shots_on_goal + cleanPlayerGamestats.shots_on_goal,
             own_goals: oldPlayer.own_goals + calculateOwnGoals()
         }
-        await updatePlayer(updatedPlayer, player.id)
+        await updatePlayer(updatedPlayer, player.id).catch((err) => console.log(err))
     }
 }
 
