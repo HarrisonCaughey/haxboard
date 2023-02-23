@@ -16,15 +16,17 @@ pool.on('error', (err, client) => {
 async function games(req, res) {
     console.log("api/games endpoint hit in serverless function")
     if (req.method === 'GET') {
-        let offset = (req.params.page - 1) * 10;
-        let order = req.params.order;
+        let offset = (req.query.page - 1) * 10;
+        let order = req.query.order;
+        let direction = req.query.direction
         pool.connect((err, client, done) => {
             if (err) throw err
             client.query(
                 'SELECT * ' +
                 'FROM public."Games" ' +
-                'ORDER BY $1 ' +
-                'OFFSET $2 LIMIT 10 ', [order, offset], (err, data) => {
+                "ORDER BY (case when $2 = 'ASC' then $1 end) ASC, " +
+                "(case when $2 = 'DESC' then $1 end) DESC " +
+                'OFFSET $3 LIMIT 10 ', [order, direction, offset], (err, data) => {
                 done()
                 if (err) {
                     console.log(err.stack)
