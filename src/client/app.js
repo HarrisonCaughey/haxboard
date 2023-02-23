@@ -4,7 +4,7 @@ import "bulma";
 import "toastr/toastr.scss";
 import {Redirect, Route, Switch} from "react-router-dom";
 import {PlayerStats} from "./pages/player-stats";
-import {Home} from "./pages/home";
+import {GameHistory} from "./pages/game-history";
 import ReplayWrapper from "../replay-analyzer/src/App";
 
 export class App extends React.Component {
@@ -19,7 +19,7 @@ export class App extends React.Component {
             <Switch>
                 <Route path="/record" component={ReplayWrapper}/>
                 <Route path="/stats" component={PlayerStats}/>
-                <Route exact path="/" component={Home}/>
+                <Route exact path="/" component={GameHistory}/>
                 <Redirect to={"/"} />
             </Switch>
         </div>;
