@@ -3,6 +3,7 @@ import {getGames, getPlayers} from "../services/api";
 import {DataGrid, GridLoadingOverlay} from '@mui/x-data-grid';
 import {Form} from "react-bootstrap";
 import {ELO_VOLATILITY} from "../constants/pages";
+import toastr from "toastr";
 
 
 export class PlayerStats extends React.Component {
@@ -21,7 +22,7 @@ export class PlayerStats extends React.Component {
                     headerName: 'Win/Loss Ratio',
                     width: 150,
                     valueGetter: (params) =>
-                            `${this.getWinLossRational(params.row.games_won, params.row.games_played)}%`,
+                            `${this.getWinLossRatio(params.row.games_won, params.row.games_played)}%`,
                     sortComparator: this.percentageComparator,
                 },
                 { field: 'games_played', headerName: 'Games Played', width: 100 },
@@ -40,9 +41,8 @@ export class PlayerStats extends React.Component {
     componentDidMount() {
         getPlayers().then((res) => {
             this.setState({ players: res.data });
-            getGames().then((res) => {
-                this.calculatePlayerElo(res.data)
-            })
+        }).catch((err) => {
+            toastr.error("Server error when getting player stats")
         })
     }
 
@@ -69,7 +69,7 @@ export class PlayerStats extends React.Component {
         this.setState({players: players})
     }
 
-    getWinLossRational(won, played) {
+    getWinLossRatio(won, played) {
         let wlr = 0
         if (won !== 0) {
             wlr = (100 * won) / (played)

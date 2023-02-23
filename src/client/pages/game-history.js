@@ -59,6 +59,25 @@ export class GameHistory extends React.Component {
         }
     }
 
+    componentDidMount() {
+        getPlayers().then((players) => {
+            this.setState({ players: players.data });
+            getGames().then(games => {
+                games = games.data
+                for (let i = 0; i < games.length; i++) {
+                    games[i].players = `${games[i].p1_name} vs. ${games[i].p2_name}`
+                    games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
+                    games[i].rounds = games[i].score.length;
+                    games[i].formattedScore = games[i].score.map(round => " " + round);
+                    games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
+                }
+                this.setState({ games: games });
+                this.calculatePlayerElo(games);
+            })
+        })
+
+    }
+
 
     deleteGame() {
         let params = this.state.selectedRow
@@ -136,25 +155,6 @@ export class GameHistory extends React.Component {
         delete player_two.value;
         delete player_two.elo
         return [player_one, player_two]
-    }
-
-    componentDidMount() {
-        getPlayers().then((players) => {
-            this.setState({ players: players.data });
-            getGames().then(games => {
-                games = games.data
-                for (let i = 0; i < games.length; i++) {
-                    games[i].players = `${games[i].p1_name} vs. ${games[i].p2_name}`
-                    games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
-                    games[i].rounds = games[i].score.length;
-                    games[i].formattedScore = games[i].score.map(round => " " + round);
-                    games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
-                }
-                this.setState({ games: games });
-                this.calculatePlayerElo(games);
-            })
-        })
-
     }
 
     calculatePlayerElo(games) {
