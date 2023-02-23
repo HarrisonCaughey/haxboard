@@ -13,6 +13,9 @@ export function getGames(page = 1, direction = "ASC", order = "date") {
 
 export function saveGame(game) {
     return axios.post(`${serverPath}/api/games`, {game: game})
+        .then((res) => {
+            return res.data
+        })
         .catch((err) => {
             console.error(err);
         })
@@ -52,6 +55,9 @@ export function getPlayerGameStats(gameId, playerId) {
 
 export function savePlayerGameStats(playerGameStats) {
     return axios.post(`${serverPath}/api/playerGameStats`, {playerGameStats: playerGameStats})
+        .then((res) => {
+            return res.data
+        })
         .catch((err) => {
             console.error(err);
         })
@@ -84,20 +90,24 @@ export function getBinaries() {
     return axios.get(`${serverPath}/api/binary`)
         .then((games) => {
             return games;
-        }).catch((err) => {
+        })
+        .catch((err) => {
             console.error(err);
         })
 }
 
 export function saveBinaryFile(file) {
     return axios.post(`${serverPath}/api/binary`, {file: file})
+        .then((res) => {
+            return res.data
+        })
         .catch((err) => {
             console.error(err);
         })
 }
 
 export function deleteBinaryFile(id) {
-    return axios.delete(`${serverPath}/api/binary`, { id: id })
+    return axios.delete(`${serverPath}/api/binary`, { data: {id: id} })
         .catch((err) => {
             console.error(err);
         })
