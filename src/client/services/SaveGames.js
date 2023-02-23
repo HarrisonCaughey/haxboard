@@ -110,6 +110,7 @@ function calculateOwnGoals() {
 }
 
 async function savePlayerStats(gameId, playerStats) {
+    console.log("player stats " + playerStats)
     for (const player of playerStats) {
         let cleanPlayerGamestats = {
             game_id: gameId,
@@ -126,6 +127,8 @@ async function savePlayerStats(gameId, playerStats) {
         await savePlayerGameStats(cleanPlayerGamestats).catch((err) => console.log(err))
 
         let oldPlayer = dbPlayers[player.id] // TODO dbPlayers???
+        console.log("player " + player)
+        console.log("oldPlayer " + oldPlayer)
         let updatedPlayer = {
             games_played: oldPlayer.games_played + 1,
             games_won: player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won,
