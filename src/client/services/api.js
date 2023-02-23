@@ -79,3 +79,26 @@ export function updatePseudonyms(pseudonyms, id) {
             console.error(err);
         })
 }
+
+export function getBinaries() {
+    return axios.get(`${serverPath}/api/binary`)
+        .then((games) => {
+            return games;
+        }).catch((err) => {
+            console.error(err);
+        })
+}
+
+export function saveBinaryFile(file) {
+    return axios.post(`${serverPath}/api/binary`, {file: file})
+        .catch((err) => {
+            console.error(err);
+        })
+}
+
+export function deleteBinaryFile(id) {
+    return axios.delete(`${serverPath}/api/binary`, { id: id })
+        .catch((err) => {
+            console.error(err);
+        })
+}
