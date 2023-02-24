@@ -7,6 +7,7 @@ import {Button} from "@mui/material";
 import toastr from "toastr";
 import $ from "jquery";
 import {ELO_VOLATILITY} from "../constants/pages";
+import {white} from "mui/source/styles/colors";
 
 
 export class GameHistory extends React.Component {
@@ -24,12 +25,12 @@ export class GameHistory extends React.Component {
             columns: [
                 { field: 'date', headerName: 'Date', width: 100, sortable: true },
                 { field: 'game_time', headerName: 'Game Time', width: 60, sortable: true },
-                { field: 'red_team_names', headerName: 'Red Team', width: 200, sortable: false },
-                { field: 'red_possession', headerName: 'Red Poss', width: 40, sortable: true },
-                { field: 'red_score', headerName: 'Red Score', width: 20, sortable: false },
-                { field: 'blue_score', headerName: 'Blue Score', width: 20, sortable: false },
-                { field: 'blue_possession', headerName: 'Blue Poss', width: 40, sortable: true },
-                { field: 'blue_team_names', headerName: 'Blue Team', width: 200, sortable: false },
+                { field: 'red_team_names', headerName: 'Red Team', width: 250, sortable: false },
+                { field: 'red_possession', headerName: 'R%', width: 40, sortable: true },
+                { field: 'red_score', headerName: 'R', width: 20, sortable: false },
+                { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
+                { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true },
+                { field: 'blue_team_names', headerName: 'Blue Team', width: 250, sortable: false },
                 {
                     field: "action",
                     headerName: "",
@@ -211,7 +212,7 @@ export class GameHistory extends React.Component {
     render() {
         return (
             <div>
-                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%'}}>
+                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%', background: white}}>
                     <Form.Label>Game History:</Form.Label>
                     {   this.state.games ?
                         <div style={{height: 420, width: '100%'}}>
