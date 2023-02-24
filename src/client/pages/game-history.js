@@ -232,7 +232,7 @@ export class GameHistory extends React.Component {
                         />
                     </div> : null}
                 </Form>
-                <ConfirmModal handleDelete={this.deleteGame}/>
+                {/*//<ConfirmModal handleDelete={this.deleteGame}/>*/}
             </div>
         )
     }
