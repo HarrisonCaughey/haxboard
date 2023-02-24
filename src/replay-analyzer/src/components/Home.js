@@ -1,3 +1,6 @@
+/* eslint-disable no-redeclare */
+/* eslint-disable no-unused-vars */
+
 import $ from 'jquery'
 import { handleFile } from "../game2.js";
 import LoadingScreen from "./LoadingScreen";
@@ -83,18 +86,17 @@ function Home() {
 
   }
 
-  function handleMultipleFiles(e) {
+  async function handleMultipleFiles(e) {
     let files = e.target.files
     console.log(files)
     for (var j = 0; j < files.length; j++) {
-      handleFile(files[j])
+      await handleFile(files[j])
       setTimeout(function(){
         console.log("doing it")
       }, 5000);
       console.log("finished file")
     }
     console.log("finished all files")
-
   }
 
   function openConfirmModal() {

@@ -732,7 +732,7 @@ function $a(a) {
   this.Il()
 }
 
-export function handleFile(file) {
+export async function handleFile(file) {
   var c = this;
   var a = file,
     b = new FileReader;
