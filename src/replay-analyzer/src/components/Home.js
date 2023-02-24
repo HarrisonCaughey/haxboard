@@ -1,4 +1,3 @@
-import Changelog from "./changelog/Changelog";
 import $ from 'jquery'
 import { handleFile } from "../game2.js";
 import LoadingScreen from "./LoadingScreen";
