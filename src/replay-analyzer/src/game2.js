@@ -17,8 +17,8 @@
 
 import $ from 'jquery';
 import './vendor/pako-jszip.min.js';
-import { showStats, setGameStats, dispatchPlayerList, dispatchPlayerPos } from './components/Home';
-import {saveGames} from "../../client/services/SaveGames";
+import {showStats, setGameStats, dispatchPlayerList, dispatchPlayerPos, saveGames} from './components/Home';
+
 
 var loading = {};
 var gamesFile = null
@@ -728,18 +728,16 @@ function $a(a) {
   this.Il()
 }
 
-export function handleFile(e) {
+export function handleFile(file) {
   var c = this;
-  var a = e.target.files;
-  if (!(1 > a.length)) {
-    var a = a.item(0),
-      b = new FileReader;
-    gamesFile = a
-    b.onload = function () {
-      y.i(parseReplay, b.result)
-    };
-    b.readAsArrayBuffer(a)
-  }
+  var a = file,
+    b = new FileReader;
+  gamesFile = a
+  b.onload = function () {
+    y.i(parseReplay, b.result)
+  };
+  b.readAsArrayBuffer(a)
+
 };
 function parseReplay(a) {
   u.po(a)
