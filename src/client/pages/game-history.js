@@ -219,8 +219,8 @@ export class GameHistory extends React.Component {
                         <DataGrid
                                 rows={this.state.games}
                                 columns={this.state.columns}
-                                pageSize={6}
-                                rowsPerPageOptions={[6]}
+                                pageSize={10}
+                                rowsPerPageOptions={[10]}
                                 components={{
                                     NoRowsOverlay: GridLoadingOverlay
                                 }}
