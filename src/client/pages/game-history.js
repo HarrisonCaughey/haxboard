@@ -22,14 +22,14 @@ export class GameHistory extends React.Component {
             games: [],
             players: null,
             columns: [
-                { field: 'date', headerName: 'Date', width: 200, sortable: true },
-                { field: 'game_time', headerName: 'Game Time', width: 120 },
-                { field: 'red_team_names', headerName: 'Red Team', width: 150, sortable: false },
-                { field: 'red_possession', headerName: 'Red Poss', width: 200, sortable: false },
-                { field: 'red_score', headerName: 'Red Score', width: 200 },
-                { field: 'blue_score', headerName: 'Blue Score', width: 150, sortable: false },
-                { field: 'blue_possession', headerName: 'Blue Poss', width: 200, sortable: false },
-                { field: 'blue_team_names', headerName: 'Blue Team', width: 200 },
+                { field: 'date', headerName: 'Date', width: 100, sortable: true },
+                { field: 'game_time', headerName: 'Game Time', width: 60, sortable: true },
+                { field: 'red_team_names', headerName: 'Red Team', width: 200, sortable: false },
+                { field: 'red_possession', headerName: 'Red Poss', width: 40, sortable: true },
+                { field: 'red_score', headerName: 'Red Score', width: 20, sortable: false },
+                { field: 'blue_score', headerName: 'Blue Score', width: 20, sortable: false },
+                { field: 'blue_possession', headerName: 'Blue Poss', width: 40, sortable: true },
+                { field: 'blue_team_names', headerName: 'Blue Team', width: 200, sortable: false },
                 {
                     field: "action",
                     headerName: "",
@@ -74,13 +74,23 @@ export class GameHistory extends React.Component {
                 //     games[i].formattedScore = games[i].score.map(round => " " + round);
                 //     games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
                 // }
-
+                games.forEach((game) => {
+                    game.date = game.date.toISOString().slice(0, 10)
+                    game.game_time = this.parseTime(game.game_time)
+                })
 
                 this.setState({ games: games });
                 //this.calculatePlayerElo(games);
             })
         })
 
+    }
+
+    parseTime(gt) {
+        var mins = Math.floor(gt / 60);
+        gt -= mins * 60;
+        if (gt < 10) gt = "0" + gt;
+        return "" + mins + ":" + gt;
     }
 
 
