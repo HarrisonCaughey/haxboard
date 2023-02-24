@@ -215,7 +215,7 @@ export class GameHistory extends React.Component {
                 <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%', background: white}}>
                     <Form.Label>Game History:</Form.Label>
                     {   this.state.games ?
-                        <div style={{height: 420, width: '100%'}}>
+                        <div style={{height: 650, width: '100%'}}>
                         <DataGrid
                                 rows={this.state.games}
                                 columns={this.state.columns}
