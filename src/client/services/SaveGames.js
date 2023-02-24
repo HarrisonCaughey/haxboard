@@ -1,4 +1,7 @@
 import {getPlayers, getPseudonyms, saveBinaryFile, saveGame, savePlayerGameStats, updatePlayer} from "./api";
+import {ELO_VOLATILITY} from "../constants/pages";
+import toastr from "toastr";
+
 import {handleFile} from "../../replay-analyzer/src/game2";
 
 let pseuds = {}
@@ -55,6 +58,11 @@ export async function saveGames(file, games) {
             let result = await saveGame(cleanGame).catch((err) => console.log(err))
             let gameId = result[0].id
             await savePlayerStats(gameId, playerStats)
+            console.log("old player stats:")
+            console.log(dbPlayers)
+            setPlayersElo(cleanGame, playerStats)
+            console.log("new old player stats:")
+            console.log(dbPlayers)
             console.log(cleanGame)
             console.log(playerStats)
         }
@@ -68,6 +76,8 @@ function getPseuds(listOfNicks) {
             listOfIds.push(pseuds[nick])
         } else {
             //TODO notify if doestn exist in pseuds
+            console.log("Unrecognized player name")
+            toastr.error("Unrecognized player name")
         }
     })
     return listOfIds
@@ -84,18 +94,13 @@ function getDateFromFile(file) {
 function checkGameValidity(game) {
     // score check
     if (game.red_score === game.blue_score) return false;
-
     if (game.red_score < 3 && game.blue_score < 3) return false;
-
     if (game.red_score > 5 || game.blue_score > 5) return false;
-
     //player check
     if (game.red_team.length !== game.blue_team.length) return false;
-
     const playersPlayedList = game.red_team.concat(game.blue_team);
     const playersPlayedSet = new Set(playersPlayedList);
     if (playersPlayedList.length !== playersPlayedSet.size) return false;
-
     return true
 }
 
@@ -204,4 +209,36 @@ function handleFiles(files) {
     files.forEach((file) => {
         handleFile(file)
     })
+}
+
+function setPlayersElo(game, playerStats) {
+    let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
+    let winners = winnerStr === "red" ? game.red_team : game.blue_team;
+    let losers = winnerStr === "red" ? game.blue_team : game.red_team;
+    let redTeamElo = 0;
+    let blueTeamElo = 0;
+    for (let i = 0; i < game.red_team.length; i++) {
+        const id = game.red_team[i]
+        redTeamElo += dbPlayers[id].elo
+    }
+    for (let i = 0; i < game.blue_team.length; i++) {
+        const id = game.blue_team[i]
+        blueTeamElo += dbPlayers[id].elo
+    }
+    let r1 = Math.pow(10, redTeamElo / 400)
+    let r2 = Math.pow(10, blueTeamElo / 400)
+    let e1 = r1 / (r1 + r2)
+    let e2 = r2 / (r2 + r1)
+    for (let i = 0; i < winners.length; i++) {
+        let winner = winners[i]
+        let individualElo = dbPlayers[winner].elo
+        individualElo = parseInt(individualElo + ELO_VOLATILITY * (1 - e1) * (individualElo / (winnerStr === "red" ? redTeamElo : blueTeamElo)))
+        dbPlayers[winner].elo = individualElo
+    }
+    for (let i = 0; i < losers.length; i++) {
+        let loser = losers[i]
+        let individualElo = dbPlayers[loser].elo
+        individualElo = parseInt(individualElo - ELO_VOLATILITY * (1 - e2) * (individualElo / (winnerStr === "red" ? blueTeamElo : redTeamElo)))
+        dbPlayers[loser].elo = individualElo
+    }
 }
