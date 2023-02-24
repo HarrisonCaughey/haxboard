@@ -61,7 +61,7 @@ async function games(req, res) {
         let game = req.body.game
         pool.connect((err, client, done) => {
             if (err) throw err
-            client.('INSERT INTO public."Games" (red_team, blue_team, red_score, blue_score, ' +
+            client.query('INSERT INTO public."Games" (red_team, blue_team, red_score, blue_score, ' +
                     'red_possession, blue_possession, date, game_time, binary_id) ' +
                     'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9); ' +
                     'SELECT SCOPE_IDENTITY();',
