@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 
 import $ from 'jquery'
-import { handleFile } from "../game2.js";
+import {handleFile, handleFiles} from "../game2.js";
 import LoadingScreen from "./LoadingScreen";
 import { useSelector, useDispatch } from "react-redux";
 import { setMainMode } from "../slices/mainModeSlice";
@@ -88,14 +88,10 @@ function Home() {
 
   async function handleMultipleFiles(e) {
     let files = e.target.files
+    console.log("and so it begins")
+
+    await handleFiles(files)
     console.log(files)
-    for (var j = 0; j < files.length; j++) {
-      await handleFile(files[j])
-      setTimeout(function(){
-        console.log("doing it")
-      }, 5000);
-      console.log("finished file")
-    }
     console.log("finished all files")
   }
 
@@ -177,7 +173,7 @@ class ConfirmModal extends React.Component {
 export default Home;
 
 export async function saveGames(file, games) {
-
+  console.log(file)
   console.log(games)
   let binaryId = 1
   // saveBinaryFile(file).then ((res) => {
@@ -372,12 +368,6 @@ function createPlayersMap(data) {
     map[player.id] = player
   })
   return map;
-}
-
-function handleFiles(files) {
-  files.forEach((file) => {
-    handleFile(file)
-  })
 }
 
 function setPlayersElo(game, playerStats) {

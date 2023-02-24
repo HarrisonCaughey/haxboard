@@ -732,18 +732,59 @@ function $a(a) {
   this.Il()
 }
 
-export async function handleFile(file) {
-  var c = this;
-  var a = file,
-    b = new FileReader;
-  gamesFile = a
+export function handleFile(file) {
+  console.log(file)
+  let b = new FileReader;
+  gamesFile = file
   b.onload = function () {
     y.i(parseReplay, b.result)
   };
-  b.readAsArrayBuffer(a)
+  b.readAsArrayBuffer(file)
 
 };
-function parseReplay(a) {
+
+export async function handleFiles(files) {
+  console.log(files)
+  const filePromises = Object.values(files).map((file) => {
+    // Return a promise per file
+    console.log(file)
+    return new Promise((resolve, reject) => {
+      let reader = new FileReader;
+      gamesFile = file
+      reader.onload = async function () {
+        try {
+          const response = await parseReplay(reader.result)
+          resolve(response)
+        } catch (err) {
+          reject(err)
+        }
+      };
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      reader.readAsArrayBuffer(file)
+    });
+  });
+
+  // Wait for all promises to be resolved
+  const fileInfos = await Promise.all(filePromises);
+
+  console.log('COMPLETED');
+
+  // Profit
+  return fileInfos;
+}
+
+function checkFlag(flag) {
+  if(flag === false) {
+    window.setTimeout(checkFlag, 100); /* this checks the flag every 100 milliseconds*/
+  } else {
+    /* do something*/
+  }
+}
+checkFlag();
+
+async function parseReplay(a) {
   u.po(a)
 }
 function Aa(a) {
@@ -4499,13 +4540,12 @@ xa.prototype = C(V.prototype, {
       })
     }
   },
-  Dl: function () {
+  Dl: async function () {
     var a = this.Lc;
     // CHECKPOINT WAŻNY tu leci nagranie, całe byteLength
     if (loading.recLength == 1) {
       loading.recLength = a.o.byteLength - a.a;
-    }
-    else if (!loading.done) {
+    } else if (!loading.done) {
       loading.analyzed = loading.recLength - a.o.byteLength + a.a;
       const progress = Math.floor(loading.analyzed / loading.recLength * 100);
       if (progress < loading.progress) {
@@ -4516,8 +4556,8 @@ xa.prototype = C(V.prototype, {
         dispatchPlayerPos(playerPos)
         bringReplayer();
         //TODO here we send the match/(s)
-
-        saveGames(gamesFile, match)
+        console.log("calling saveGames")
+        await saveGames(gamesFile, match)
       } else if (progress !== loading.progress) {
         loading.progress = progress;
         loading.changed = true;
