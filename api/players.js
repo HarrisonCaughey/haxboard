@@ -1,4 +1,3 @@
-const { Pool } = require('pg')
 const knex = require('knex');
 require('dotenv').config();
 
@@ -25,6 +24,8 @@ async function players(req, res) {
                 console.log(err);
             });
     } else if (req.method === 'PUT') {
+        let player = req.body.player;
+        let id = req.body.id;
         db('Players').where({id: id})
             .update({
                 name: player.name,

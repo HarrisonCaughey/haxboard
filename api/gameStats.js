@@ -29,7 +29,7 @@ async function playerGameStats(req, res) {
                 console.log(err);
             });
     } else if (req.method === 'POST') {
-        let stats = req.body.playerGameStats
+        let player = req.body.playerGameStats
         db('PlayerGameStats').insert(
             {
                 game_id: player.game_id,
