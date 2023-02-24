@@ -87,12 +87,12 @@ export class PlayerStats extends React.Component {
                         <DataGrid
                             rows={this.state.players}
                             columns={this.state.columns}
-                            pageSize={8}
+                            pageSize={10}
                             components={{
                                 NoRowsOverlay: GridLoadingOverlay
                             }}
                             sortingOrder={['asc', 'desc']}
-                            rowsPerPageOptions={[8]}
+                            rowsPerPageOptions={[10]}
                             initialState={{
                                 sorting: {
                                     sortModel: [{ field: 'elo', sort: 'desc' }],
@@ -104,11 +104,11 @@ export class PlayerStats extends React.Component {
                             <DataGrid
                                     rows={[]}
                                     columns={this.state.columns}
-                                    pageSize={8}
+                                    pageSize={10}
                                     components={{
                                         NoRowsOverlay: GridLoadingOverlay
                                     }}
-                                    rowsPerPageOptions={[8]}
+                                    rowsPerPageOptions={[10]}
                             />
                         </div>}
             </Form>
