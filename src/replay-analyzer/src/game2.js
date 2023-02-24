@@ -14,6 +14,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-expressions */
+/* eslint-disable no-redeclare */
 
 import $ from 'jquery';
 import './vendor/pako-jszip.min.js';
@@ -957,8 +958,7 @@ function ha(a) {
       left: '150%',
     }, { duration: 700, easing: 'swing', queue: false });
 
-    $("#loading-screen").css('left', '150%')
-
+    $("#loading-screen").css('left', '150%');
   }
 }
 function Q(a) {
