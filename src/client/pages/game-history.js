@@ -22,11 +22,14 @@ export class GameHistory extends React.Component {
             games: [],
             players: null,
             columns: [
-                { field: 'players', headerName: 'Players', width: 200, sortable: false },
-                { field: 'winner', headerName: 'Winner', width: 120 },
-                { field: 'elo_change', headerName: 'Elo Change', width: 150, sortable: false },
-                { field: 'formattedScore', headerName: 'Score', width: 200, sortable: false },
-                { field: 'formattedDate', headerName: 'Date', width: 200 },
+                { field: 'date', headerName: 'Date', width: 200, sortable: true },
+                { field: 'game_time', headerName: 'Game Time', width: 120 },
+                { field: 'red_team_names', headerName: 'Red Team', width: 150, sortable: false },
+                { field: 'red_possession', headerName: 'Red Poss', width: 200, sortable: false },
+                { field: 'red_score', headerName: 'Red Score', width: 200 },
+                { field: 'blue_score', headerName: 'Blue Score', width: 150, sortable: false },
+                { field: 'blue_possession', headerName: 'Blue Poss', width: 200, sortable: false },
+                { field: 'blue_team_names', headerName: 'Blue Team', width: 200 },
                 {
                     field: "action",
                     headerName: "",
@@ -62,17 +65,19 @@ export class GameHistory extends React.Component {
     componentDidMount() {
         getPlayers().then((players) => {
             this.setState({ players: players.data });
-            getGames().then(games => {
-                for (let i = 0; i < games.length; i++) {
-                    console.log(games[i])
-                    games[i].players = `${games[i].p1_name} vs. ${games[i].p2_name}`
-                    games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
-                    games[i].rounds = games[i].score.length;
-                    games[i].formattedScore = games[i].score.map(round => " " + round);
-                    games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
-                }
+            getGames().then(res => {
+                let games = res.data
+                // for (let i = 0; i < games.length; i++) {
+                //     console.log(games[i])
+                //     games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
+                //     games[i].rounds = games[i].score.length;
+                //     games[i].formattedScore = games[i].score.map(round => " " + round);
+                //     games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
+                // }
+
+
                 this.setState({ games: games });
-                this.calculatePlayerElo(games);
+                //this.calculatePlayerElo(games);
             })
         })
 

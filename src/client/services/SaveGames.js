@@ -128,20 +128,28 @@ async function savePlayerStats(gameId, playerStats) {
 
         await savePlayerGameStats(cleanPlayerGamestats).catch((err) => console.log(err))
 
-        let oldPlayer = dbPlayers[player.id] // TODO dbPlayers???
+        let oldPlayer = dbPlayers[player.id]
+        oldPlayer.games_played += 1
+        oldPlayer.games_won = player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won
+        oldPlayer.goals += cleanPlayerGamestats.goals
+        oldPlayer.assists += cleanPlayerGamestats.assists
+        oldPlayer.kicks += cleanPlayerGamestats.kicks
+        oldPlayer.passes += cleanPlayerGamestats.passes
+        oldPlayer.shots_on_goal += cleanPlayerGamestats.shots_on_goal
+        oldPlayer.own_goals += calculateOwnGoals()
         console.log("player " + player)
         console.log("oldPlayer " + oldPlayer)
         let updatedPlayer = {
-            games_played: oldPlayer.games_played + 1,
-            games_won: player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won,
-            elo: oldPlayer.elo + calculateElo(),
-            mvps: oldPlayer.mvps + calculateMvp(),
-            goals: oldPlayer.goals + cleanPlayerGamestats.goals,
-            assists: oldPlayer.assists + cleanPlayerGamestats.assists,
-            kicks: oldPlayer.kicks + cleanPlayerGamestats.kicks,
-            passes: oldPlayer.passes + cleanPlayerGamestats.passes,
-            shots_on_goal: oldPlayer.shots_on_goal + cleanPlayerGamestats.shots_on_goal,
-            own_goals: oldPlayer.own_goals + calculateOwnGoals()
+            games_played: oldPlayer.games_played,
+            games_won: oldPlayer.games_won,
+            elo: oldPlayer.elo,
+            mvps: oldPlayer.mvps,
+            goals: oldPlayer.goals,
+            assists: oldPlayer.assists,
+            kicks: oldPlayer.kicks,
+            passes: oldPlayer.passes,
+            shots_on_goal: oldPlayer.shots_on_goal,
+            own_goals: oldPlayer.own_goals
         }
         await updatePlayer(updatedPlayer, player.id).catch((err) => console.log(err))
     }
