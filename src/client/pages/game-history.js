@@ -75,7 +75,7 @@ export class GameHistory extends React.Component {
                 //     games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
                 // }
                 games.forEach((game) => {
-                    game.date = game.date.toISOString().slice(0, 10)
+                    game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
                 })
 
