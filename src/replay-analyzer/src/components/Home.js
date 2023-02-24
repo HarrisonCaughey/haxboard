@@ -9,6 +9,7 @@ import {useState} from "react";
 import {getPlayers, getPseudonyms, saveGame, savePlayerGameStats, updatePlayer} from "../../../client/services/api";
 import toastr from "toastr";
 import {ELO_VOLATILITY} from "../../../client/constants/pages";
+import {delay} from "@reduxjs/toolkit/src/utils";
 
 export function showStats() { }
 export function setGameStats() { }
@@ -79,6 +80,9 @@ function Home() {
     for (var j = 0; j < files.length; j++) {
       handleFile(files[j])
       console.log("finished a file")
+      setTimeout(function(){
+
+      }, 5000);
     }
     console.log("finished all files")
 
