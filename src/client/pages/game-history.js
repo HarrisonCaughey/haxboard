@@ -63,9 +63,8 @@ export class GameHistory extends React.Component {
         getPlayers().then((players) => {
             this.setState({ players: players.data });
             getGames().then(games => {
-                console.log("games " + games)
-                games = games.data
                 for (let i = 0; i < games.length; i++) {
+                    console.log(games[i])
                     games[i].players = `${games[i].p1_name} vs. ${games[i].p2_name}`
                     games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
                     games[i].rounds = games[i].score.length;
