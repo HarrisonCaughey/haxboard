@@ -78,9 +78,10 @@ function Home() {
     console.log(files)
     for (var j = 0; j < files.length; j++) {
       handleFile(files[j])
-      console.log("finished a file")
       setTimeout(function(){
+        console.log("doing it")
       }, 5000);
+      console.log("finished file")
     }
     console.log("finished all files")
 
