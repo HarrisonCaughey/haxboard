@@ -730,7 +730,6 @@ function $a(a) {
 
 export function handleFile(e) {
   var c = this;
-  console.log(e.target.files)
   var a = e.target.files;
   if (!(1 > a.length)) {
     var a = a.item(0),

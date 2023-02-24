@@ -62,6 +62,15 @@ function Home() {
 
   }
 
+  function handleMultipleFiles(e) {
+    let files = e.target.files
+    files.forEach((file) => {
+      handleFile(file)
+      console.log("finished a file")
+    })
+    console.log("finished all files")
+  }
+
   return (
     <>
       <div className='roomlist-view' style={{ zIndex: 5 }}>
@@ -69,9 +78,17 @@ function Home() {
           <div className='file-btn'>
             <label htmlFor='replayfile'>
               <span style={{ float: 'left' }}>►</span>
-              <span style={{ float: 'center' }}>Load replay</span>
+              <span style={{ float: 'center' }}>Load SINGLE replay</span>
             </label>
             <input id='replayfile' type='file' accept='.hbr2' data-hook='replayfile' onChange={handleChange} />
+          </div>
+
+          <div className='file-btn'>
+            <label htmlFor='replayfile2'>
+              <span style={{ float: 'left' }}>►</span>
+              <span style={{ float: 'center' }}>Load MULTIPLE replay</span>
+            </label>
+            <input id='replayfile2' type='file' accept='.hbr2' data-hook='replayfile2' multiple={true} onChange={handleMultipleFiles} />
           </div>
         </div>
       </div>
