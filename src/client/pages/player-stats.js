@@ -83,7 +83,7 @@ export class PlayerStats extends React.Component {
             <Form style={{paddingLeft: '10%', paddingRight: '10%', paddingTop: '5%'}}>
                 <Form.Label>Scoreboard:</Form.Label>
                 {   this.state.players && this.state.players.length !== 0 && this.state.players[0].elo ?
-                    <div style={{height: 650, width: '100%'}}>
+                    <div style={{height: 525, width: '100%'}}>
                         <DataGrid
                             rows={this.state.players}
                             columns={this.state.columns}

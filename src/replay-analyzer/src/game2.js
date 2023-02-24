@@ -15,6 +15,9 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-redeclare */
+/* eslint-disable no-sequences */
+/* eslint-disable no-mixed-operators */
+/* eslint-disable no-unused-vars */
 
 import $ from 'jquery';
 import './vendor/pako-jszip.min.js';

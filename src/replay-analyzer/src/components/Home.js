@@ -5,10 +5,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { setMainMode } from "../slices/mainModeSlice";
 import { setDivStyle, setStats, setPlayerList, setPlayerPos } from "../slices/gameStatsSlice";
 import GameStats from "./game stats/GameStats";
-import {useState} from "react";
+import React, {useState} from "react";
 import {getPlayers, getPseudonyms, saveGame, savePlayerGameStats, updatePlayer} from "../../../client/services/api";
 import toastr from "toastr";
 import {ELO_VOLATILITY} from "../../../client/constants/pages";
+
 
 export function showStats() { }
 export function setGameStats() { }
@@ -26,6 +27,15 @@ function Home() {
   const version = useSelector((state) => state.mainMode.version);
   const [pseudonyms, setPseuds] = useState({});
   const [dbPlayers, setDBPlayers] = useState({});
+  const [showModal, setShowModal] = useState(false);
+
+  var handleCloseModal = () => setShowModal(false);
+
+  var handleSaveModal = () => {
+    console.log("success");
+  };
+
+  const renderBackdrop = (props) => <div className="backdrop" {...props} />;
 
 
   function showStatsExp(elStyle) {
@@ -87,6 +97,10 @@ function Home() {
 
   }
 
+  function openConfirmModal() {
+    $('#confirmModal').addClass('is-active');
+  }
+
   return (
     <>
       <div className='roomlist-view' style={{ zIndex: 5 }}>
@@ -106,12 +120,56 @@ function Home() {
             </label>
             <input id='replayfile2' type='file' accept='.hbr2' data-hook='replayfile2' multiple={true} onChange={handleMultipleFiles} />
           </div>
+
+          <div>
+            <button type="button" onClick={() => openConfirmModal()}>
+              Open Modal
+            </button>
+          </div>
+          <p>Click to get the open the Modal</p>
         </div>
       </div>
       <LoadingScreen />
       {mainMode === 'stats' && <GameStats />}
+      <ConfirmModal />
     </>
   );
+}
+
+class ConfirmModal extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.closeModal = this.closeModal.bind(this);
+    this.confirm = this.confirm.bind(this);
+  }
+
+  confirm() {
+    this.props.handleDelete()
+    this.closeModal()
+  }
+
+  closeModal() {
+    $('#confirmModal').removeClass('is-active');
+  }
+
+  render() {
+    return (<div id="confirmModal" className="modal">
+      <div className="modal-background"/>
+      <div className="modal-card">
+        <header className="modal-card-head">
+          <p className="modal-card-title">Confirmation</p>
+        </header>
+        <section className="modal-card-body">
+          <p>Are you sure that you want to delete this game?</p>
+        </section>
+        <footer className="modal-card-foot">
+          <a className="button is-warning" onClick={this.confirm}>Yes</a>
+          <a className="button" onClick={this.closeModal}>No</a>
+        </footer>
+      </div>
+    </div>);
+  }
 }
 
 export default Home;
