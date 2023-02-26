@@ -241,6 +241,7 @@ class ConfirmModal extends React.Component {
 export default Home;
 
 export async function saveGames(file, games) {
+  console.log(games)
   // TODO check if passing Home instance into non-react function is feasible
   // homeInstance.openConfirmModal()
   // Home().openConfirmModal()
@@ -350,7 +351,7 @@ async function savePlayerStats(gameId, playerStats) {
       kicks: player.kicks,
       passes: player.passes,
       shots_on_goal: player.shots,
-      own_goals: 0,
+      own_goals: player.ownGoals,
       won: player.won
     }
 
@@ -364,7 +365,7 @@ async function savePlayerStats(gameId, playerStats) {
     oldPlayer.kicks += cleanPlayerGamestats.kicks
     oldPlayer.passes += cleanPlayerGamestats.passes
     oldPlayer.shots_on_goal += cleanPlayerGamestats.shots_on_goal
-    oldPlayer.own_goals += calculateOwnGoals()
+    oldPlayer.own_goals += cleanPlayerGamestats.own_goals
     let updatedPlayer = {
       games_played: oldPlayer.games_played,
       games_won: oldPlayer.games_won,
@@ -401,8 +402,9 @@ function processPlayerStats(game) {
       } else {
         if (game.redTeam.includes(pr.nick)) won = false;
       }
+      let prOwnGoals = game.own_goals[pr.nick] === undefined ? 0 : game.own_goals[pr.nick]
       const plyr = {
-        id: pr.id, nick: pr.nick, goals: prGoals, assists: prAssists, kicks: prKicks, passes: prPasses, shots: prShots, won: won
+        id: pr.id, nick: pr.nick, goals: prGoals, assists: prAssists, kicks: prKicks, passes: prPasses, shots: prShots, won: won, ownGoals: prOwnGoals
       };
       gameStats.push(plyr);
     }

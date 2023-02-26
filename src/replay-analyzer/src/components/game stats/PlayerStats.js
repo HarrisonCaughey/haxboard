@@ -49,6 +49,7 @@ function PlayerStats() {
     }
     tab = tab2;
   }
+  console.log()
 
   function handleClick(e) {
     const tab = ['Players', '', 'Goals', 'Assists', 'Kicks', 'Passes', 'Shots On Goal', 'Bumps', 'Touches'];

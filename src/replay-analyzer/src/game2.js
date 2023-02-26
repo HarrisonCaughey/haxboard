@@ -333,7 +333,7 @@ function bringReplayer() {
   e.Modernizr = Modernizr
 }(window, document);
 
-var kicker, lastKicker, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [] }], player = [], players = [], playerList = [], updatePlayers = true;
+var kicker, lastKicker, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [], own_goals: {} }], player = [], players = [], playerList = [], updatePlayers = true;
 var toucher = { name: "", team: "0" }, lastToucher = "", mtc = 0, playSounds = false, pileczka = [], keepUpdating = true, keepUpdatingStadium = true;
 var redGoalCord = [], blueGoalCord = [], checkTeams = true, autoClick = false, autoClickValue;
 var goalParsed = 0, playerPos = [], ballRadius = 10;
@@ -979,7 +979,7 @@ function ha(a) {
   this.fp.onclick = function () {
     // A.i(c.de);
     keepUpdating = true;
-    kicker, lastKicker, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [] }], player = [], players = [], playerList = [], updatePlayers = true;
+    kicker, lastKicker, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [], own_goals: {} }], player = [], players = [], playerList = [], updatePlayers = true;
     mtc = 0, playSounds = false, pileczka = [], keepUpdating = true, keepUpdatingStadium = true;
     redGoalCord = [], blueGoalCord = [], goalParsed = 0, playerPos = [];
 
@@ -4531,7 +4531,7 @@ xa.prototype = C(V.prototype, {
       var c = c + a.Ab(),
         e = a.B();
       //console.log("TU",a,b,c,d,e);
-      if (keepUpdating) kicker = undefined, lastKicker = undefined, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [] }], player = [], players = [], playerList = [], updatePlayers = true;
+      if (keepUpdating) kicker = undefined, lastKicker = undefined, goals = [], match = [{ stadium: false, started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, player: [], goals: [], own_goals: {} }], player = [], players = [], playerList = [], updatePlayers = true;
       mtc = 0;
       this.Vk.push({
         mj: c / this.mf,
@@ -5084,6 +5084,12 @@ Gb.prototype = {
             }
           } else {
             match[match.length - 1].goals.push({ scorer: kicker.name + " (own goal)", assist: false, currentScore: [match[match.length - 1].scoreRed, match[match.length - 1].scoreBlue] });
+            if (match[match.length - 1].own_goals[kicker.name] === undefined) {
+              match[match.length - 1].own_goals[kicker.name] = 1
+            } else {
+              match[match.length - 1].own_goals[kicker.name] = match[match.length - 1].own_goals[kicker.name] + 1
+            }
+            //match[match.length - 1].own_goals.push({ scorer: kicker.name, assist: false})
           }
         }
         match[match.length - 1].goals[match[match.length - 1].goals.length - 1].for = a.w;
@@ -5113,12 +5119,13 @@ Gb.prototype = {
       c.j.Fb.Eb.td.Nn();
       //console.log("game started", a, b, c);
       if (match[match.length - 1].stopped && keepUpdating) {
-        match.push({ started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, goals: [], player: match[match.length - 1].player });
+        match.push({ started: true, stopped: false, spaceMode: false, touches: [], thirds: [0, 0, 0], changes: [], gameTicks: -1, kicks: [], shots: [], redTeam: [], blueTeam: [], shotsRed: 0, shotsBlue: 0, passes: [], passesRed: 0, passesBlue: 0, kicksRed: 0, kicksBlue: 0, possRed: 0, possBlue: 0, scoreRed: 0, scoreBlue: 0, goals: [], own_goals: {}, player: match[match.length - 1].player });
         playerPos.push([]);
         for (var i = 0; i < match[match.length - 1].player.length; i++) {
           match[match.length - 1].player[i].goals = 0;
           match[match.length - 1].player[i].assists = 0;
           match[match.length - 1].player[i].kicks = 0;
+          match[match.length - 1].player[i].own_goals = 0;
         }
       }
       keepUpdatingStadium = true;
