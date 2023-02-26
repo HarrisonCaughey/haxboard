@@ -172,8 +172,7 @@ export class GameHistory extends React.Component {
     render() {
         return (
             <div>
-                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%', paddingBottom: '10%'}}>
-                    <Form.Label>Game History:</Form.Label>
+                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '7%', paddingBottom: '10%'}}>
                     {   this.state.games ?
                         <div style={{height: 650, width: '100%'}}>
                         <DataGrid

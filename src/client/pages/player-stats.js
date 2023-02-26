@@ -55,8 +55,7 @@ export class PlayerStats extends React.Component {
 
     render() {
         return (
-            <Form style={{paddingLeft: '10%', paddingRight: '10%', paddingTop: '5%', paddingBottom: '25%'}}>
-                <Form.Label>Scoreboard:</Form.Label>
+            <Form style={{paddingLeft: '10%', paddingRight: '10%', paddingTop: '7%', paddingBottom: '25%'}}>
                 {   this.state.players ?
                     <div style={{height: 525, width: '100%'}}>
                         <DataGrid

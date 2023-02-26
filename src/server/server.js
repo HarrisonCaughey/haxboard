@@ -235,6 +235,20 @@ app.post('/api/pseudonyms', (req, res) => {
         });
 })
 
+app.put('/api/playerElo', (req, res) => {
+    let elo = req.body.elo;
+    let id = req.body.id;
+    db('Players').where({id: id})
+        .update({
+            elo: elo,
+        })
+        .then((data) => {
+            res.json(data);
+        }).catch((err) => {
+        console.log(err)
+    })
+})
+
 app.listen(port, () => {
     console.log(`App running on port ${port}.`)
 })

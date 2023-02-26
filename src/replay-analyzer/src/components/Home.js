@@ -4,17 +4,24 @@
 import $ from 'jquery'
 import {handleFile, handleFiles} from "../game2.js";
 import LoadingScreen from "./LoadingScreen";
-import { useSelector, useDispatch } from "react-redux";
-import { setMainMode } from "../slices/mainModeSlice";
-import { setDivStyle, setStats, setPlayerList, setPlayerPos } from "../slices/gameStatsSlice";
+import {useDispatch, useSelector} from "react-redux";
+import {setMainMode} from "../slices/mainModeSlice";
+import {setDivStyle, setPlayerList, setPlayerPos, setStats} from "../slices/gameStatsSlice";
 import GameStats from "./game stats/GameStats";
-import React, {useEffect, useState} from "react";
-import {getPlayers, getPseudonyms, saveGame, savePlayerGameStats, updatePlayer} from "../../../client/services/api";
+import React, {useState} from "react";
+import {
+  getGames,
+  getPlayers,
+  getPseudonyms,
+  saveGame,
+  savePlayerGameStats,
+  updatePlayer, updatePlayerElo
+} from "../../../client/services/api";
 import toastr from "toastr";
 import {ELO_VOLATILITY} from "../../../client/constants/pages";
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
-
+var _ = require('lodash');
 
 export function showStats() { }
 export function setGameStats() { }
@@ -22,10 +29,7 @@ export function dispatchPlayerList() { }
 export function dispatchPlayerPos() { }
 
 let pseuds = null
-let pseudonymOptions = []
 let dbPlayers = null
-let playerOptions = []
-let pog = 0
 let homeInstance = null
 
 function Home() {
@@ -38,10 +42,10 @@ function Home() {
   const [showModal, setShowModal] = useState(false);
 
   // TODO saving home instance to global variable
-    useEffect( () => {
-      homeInstance = this
-      console.log(homeInstance)
-    }, []);
+  //   useEffect( () => {
+  //     homeInstance = this
+  //     console.log(homeInstance)
+  //   }, []);
 
 
 
@@ -96,8 +100,6 @@ function Home() {
   function handleChange(e) {
 
     $(function () {
-      pog = 1
-      console.log("pog " + pog)
       $('.roomlist-view').animate({
         left: '-150%',
       }, { duration: 700, easing: 'swing', queue: false });
@@ -112,11 +114,7 @@ function Home() {
 
   async function handleMultipleFiles(e) {
     let files = e.target.files
-    console.log("and so it begins")
-
     await handleFiles(files)
-    console.log(files)
-    console.log("finished all files")
   }
 
   function openConfirmModal() {
@@ -142,13 +140,19 @@ function Home() {
             </label>
             <input id='replayfile2' type='file' accept='.hbr2' data-hook='replayfile2' multiple={true} onChange={handleMultipleFiles} />
           </div>
-
-          <div>
-            <button type="button" onClick={() => openConfirmModal()}>
-              Open Modal
+          { process.env.NODE_ENV === 'development' ?
+              <div>
+                <button type="button" onClick={() => openConfirmModal()}>
+                  Open Modal
+                </button>
+              </div> : null
+          }
+          { process.env.NODE_ENV === 'development' ?
+            <div>
+            <button type="button" onClick={() => recalculateElo()}>
+            Recalculate Elo
             </button>
-          </div>
-          <p>Click to get the open the Modal</p>
+            </div> : null}
         </div>
       </div>
       <LoadingScreen />
@@ -184,8 +188,6 @@ class ConfirmModal extends React.Component {
       })
       await getPlayers().then((res) => {
         dbPlayers = createPlayersMap(res.data)
-        console.log("players")
-        console.log(dbPlayers)
         this.setState({
           playerOptions: Object.entries(dbPlayers).map(object => object = {
             "value": object[0],
@@ -239,8 +241,6 @@ class ConfirmModal extends React.Component {
 export default Home;
 
 export async function saveGames(file, games) {
-  console.log(file)
-  console.log(games)
   // TODO check if passing Home instance into non-react function is feasible
   // homeInstance.openConfirmModal()
   // Home().openConfirmModal()
@@ -251,7 +251,8 @@ export async function saveGames(file, games) {
   //     console.log(error)
   // })
   //TODO POST FILE
-
+  toastr.info("Processing games, please be patient")
+  let i = 1
   for (const game of games) {
     let playerStats = processPlayerStats(game)
 
@@ -280,10 +281,17 @@ export async function saveGames(file, games) {
     }
 
     if (checkGameValidity(cleanGame)) {
-      let result = await saveGame(cleanGame).catch((err) => console.log(err))
-      let gameId = result[0].id
-      await savePlayerStats(gameId, playerStats)
-      setPlayersElo(cleanGame, playerStats)
+      await saveGame(cleanGame).then(async (result) => {
+        let gameId = result[0].id
+        await savePlayerStats(gameId, playerStats)
+        setPlayersElo(cleanGame)
+        toastr.success(`Saved Game ${i}`)
+        i++
+      }).catch((err) => {
+        toastr.error(`Failed saving Game ${i}`)
+        console.log(err)
+        i++
+      })
     }
   }
 }
@@ -324,10 +332,6 @@ function checkGameValidity(game) {
   return true
 }
 
-function calculateElo() {
-  return 0
-}
-
 function calculateMvp() {
   return 0;
 }
@@ -337,7 +341,6 @@ function calculateOwnGoals() {
 }
 
 async function savePlayerStats(gameId, playerStats) {
-  console.log("player stats " + playerStats)
   for (const player of playerStats) {
     let cleanPlayerGamestats = {
       game_id: gameId,
@@ -362,8 +365,6 @@ async function savePlayerStats(gameId, playerStats) {
     oldPlayer.passes += cleanPlayerGamestats.passes
     oldPlayer.shots_on_goal += cleanPlayerGamestats.shots_on_goal
     oldPlayer.own_goals += calculateOwnGoals()
-    console.log("player " + player)
-    console.log("oldPlayer " + oldPlayer)
     let updatedPlayer = {
       games_played: oldPlayer.games_played,
       games_won: oldPlayer.games_won,
@@ -425,7 +426,14 @@ function createPlayersMap(data) {
   return map;
 }
 
-function setPlayersElo(game, playerStats) {
+function setPlayersElo(game) {
+  eloAlgorithm1(game)
+}
+
+// Classical chess elo adjusted distribute elo to team members based on their perceived contribution to the game
+// ie. the higher elo player in a winning team gets a high proportion of elo (as the model expects they contributed more)
+function eloAlgorithm1(game) {
+  // TODO figure out why people are losing more elo than they're gaining
   let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
   let winners = winnerStr === "red" ? game.red_team : game.blue_team;
   let losers = winnerStr === "red" ? game.blue_team : game.red_team;
@@ -446,13 +454,70 @@ function setPlayersElo(game, playerStats) {
   for (let i = 0; i < winners.length; i++) {
     let winner = winners[i]
     let individualElo = dbPlayers[winner].elo
-    individualElo = parseInt(individualElo + ELO_VOLATILITY * (1 - e1) * (individualElo / (winnerStr === "red" ? redTeamElo : blueTeamElo)))
+    individualElo = Math.round(individualElo + ELO_VOLATILITY * (1 - e1) * (individualElo / (winnerStr === "red" ? redTeamElo : blueTeamElo)))
+    dbPlayers[winner].elo = individualElo
+  }
+  losers = losers.map(loser => loser = {id: loser, elo: dbPlayers[loser].elo})
+  losers.sort(function (a, b) { return a.elo - b.elo })
+  for (let i = 0; i < losers.length; i++) {
+    let loser = losers[i]
+    dbPlayers[loser.id].elo = Math.round(loser.elo - ELO_VOLATILITY * (1 - e2) * (losers.at((i + 1) * -1).elo / (winnerStr === "red" ? blueTeamElo : redTeamElo)))
+  }
+}
+
+// Classical chess elo adjusted to distribute elo to team members evenly
+function eloAlgorithm2(game) {
+  let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
+  let winners = winnerStr === "red" ? game.red_team : game.blue_team;
+  let losers = winnerStr === "red" ? game.blue_team : game.red_team;
+  let redTeamElo = 0;
+  let blueTeamElo = 0;
+  for (let i = 0; i < game.red_team.length; i++) {
+    const id = game.red_team[i]
+    redTeamElo += dbPlayers[id].elo
+  }
+  for (let i = 0; i < game.blue_team.length; i++) {
+    const id = game.blue_team[i]
+    blueTeamElo += dbPlayers[id].elo
+  }
+  let r1 = Math.pow(10, redTeamElo / 400)
+  let r2 = Math.pow(10, blueTeamElo / 400)
+  let e1 = r1 / (r1 + r2)
+  let e2 = r2 / (r2 + r1)
+  for (let i = 0; i < winners.length; i++) {
+    let winner = winners[i]
+    let individualElo = dbPlayers[winner].elo
+    individualElo = Math.ceil(individualElo + ((ELO_VOLATILITY * (1 - e1)) / winners.length))
     dbPlayers[winner].elo = individualElo
   }
   for (let i = 0; i < losers.length; i++) {
     let loser = losers[i]
     let individualElo = dbPlayers[loser].elo
-    individualElo = parseInt(individualElo - ELO_VOLATILITY * (1 - e2) * (individualElo / (winnerStr === "red" ? blueTeamElo : redTeamElo)))
+    individualElo = Math.ceil(individualElo - ((ELO_VOLATILITY * (1 - e2)) / losers.length))
     dbPlayers[loser].elo = individualElo
+  }
+}
+
+async function recalculateElo() {
+  getPlayers().then(res => {
+    dbPlayers = createPlayersMap(res.data)
+    for (let i = 1; i <= _.size(dbPlayers); i++) {
+      let player = dbPlayers[i]
+      player.elo = 1000
+    }
+    getGames().then(async res => {
+      for (const game of res.data) {
+        eloAlgorithm2(game)
+      }
+      await pushEloToDatabase()
+    })
+  })
+  console.log(dbPlayers)
+}
+
+async function pushEloToDatabase() {
+  for (let i = 1; i <= _.size(dbPlayers); i++) {
+    const player = dbPlayers[i]
+    await updatePlayerElo(player.elo, player.id)
   }
 }

@@ -22,6 +22,8 @@
 import $ from 'jquery';
 import './vendor/pako-jszip.min.js';
 import {showStats, setGameStats, dispatchPlayerList, dispatchPlayerPos, saveGames} from './components/Home';
+import toastr from "toastr";
+
 
 
 var loading = {};
@@ -733,7 +735,6 @@ function $a(a) {
 }
 
 export function handleFile(file) {
-  console.log(file)
   let b = new FileReader;
   gamesFile = file
   b.onload = function () {
@@ -744,10 +745,8 @@ export function handleFile(file) {
 };
 
 export async function handleFiles(files) {
-  console.log(files)
   const filePromises = Object.values(files).map((file) => {
     // Return a promise per file
-    console.log(file)
     return new Promise((resolve, reject) => {
       let reader = new FileReader;
       gamesFile = file
@@ -4558,6 +4557,7 @@ xa.prototype = C(V.prototype, {
         //TODO here we send the match/(s)
         console.log("calling saveGames")
         await saveGames(gamesFile, match)
+        toastr.success("Completed")
       } else if (progress !== loading.progress) {
         loading.progress = progress;
         loading.changed = true;

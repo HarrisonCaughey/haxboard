@@ -112,3 +112,10 @@ export function deleteBinaryFile(id) {
             console.error(err);
         })
 }
+
+export function updatePlayerElo(elo, id) {
+    return axios.put(`${serverPath}/api/playerElo`, {elo: elo, id: id})
+        .catch((err) => {
+            console.error(err);
+        })
+}
