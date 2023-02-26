@@ -8,10 +8,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { setMainMode } from "../slices/mainModeSlice";
 import { setDivStyle, setStats, setPlayerList, setPlayerPos } from "../slices/gameStatsSlice";
 import GameStats from "./game stats/GameStats";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {getPlayers, getPseudonyms, saveGame, savePlayerGameStats, updatePlayer} from "../../../client/services/api";
 import toastr from "toastr";
 import {ELO_VOLATILITY} from "../../../client/constants/pages";
+import Dropdown from 'react-dropdown';
+import 'react-dropdown/style.css';
 
 
 export function showStats() { }
@@ -19,9 +21,12 @@ export function setGameStats() { }
 export function dispatchPlayerList() { }
 export function dispatchPlayerPos() { }
 
-let pseuds = {}
-let dbPlayers = {}
+let pseuds = null
+let pseudonymOptions = []
+let dbPlayers = null
+let playerOptions = []
 let pog = 0
+let homeInstance = null
 
 function Home() {
 
@@ -29,8 +34,17 @@ function Home() {
   const mainMode = useSelector((state) => state.mainMode.value);
   const version = useSelector((state) => state.mainMode.version);
   const [pseudonyms, setPseuds] = useState({});
-  const [dbPlayers, setDBPlayers] = useState({});
+  //const [dbPlayers, setDBPlayers] = useState({});
   const [showModal, setShowModal] = useState(false);
+
+  // TODO saving home instance to global variable
+    useEffect( () => {
+      homeInstance = this
+      console.log(homeInstance)
+    }, []);
+
+
+
 
   var handleCloseModal = () => setShowModal(false);
 
@@ -40,7 +54,17 @@ function Home() {
 
   const renderBackdrop = (props) => <div className="backdrop" {...props} />;
 
+  async function setup() {
+    await getPseudonyms().then((res) => {
+      pseuds = createPseudsMap(res.data)
+    })
 
+    await getPlayers().then((res) => {
+      dbPlayers = createPlayersMap(res.data)
+    })
+  }
+
+  setup()
   function showStatsExp(elStyle) {
     const { offsetLeft, offsetTop, clientWidth, clientHeight } = elStyle;
     const offsetParentTop = elStyle.offsetParent.offsetTop;
@@ -129,7 +153,7 @@ function Home() {
       </div>
       <LoadingScreen />
       {mainMode === 'stats' && <GameStats />}
-      <ConfirmModal />
+      <ConfirmModal pseuds={pseuds}/>
     </>
   );
 }
@@ -140,16 +164,49 @@ class ConfirmModal extends React.Component {
     super(props);
     this.closeModal = this.closeModal.bind(this);
     this.confirm = this.confirm.bind(this);
+    this.state = {
+      pseudValue: {label: 'Select an player', key: '01'},
+      playerValue: {label: 'Select an option', key: '01'},
+      pseudOptions: null,
+      playerOptions: null
+    }
+  }
+
+  async componentDidMount() {
+    await getPseudonyms().then(async (res) => {
+      pseuds = createPseudsMap(res.data)
+      this.setState({
+        pseudOptions: Object.entries(pseuds).map(object => object = {
+          "value": object[0],
+          "id": object[1],
+          "label": object[0]
+        })
+      })
+      await getPlayers().then((res) => {
+        dbPlayers = createPlayersMap(res.data)
+        console.log("players")
+        console.log(dbPlayers)
+        this.setState({
+          playerOptions: Object.entries(dbPlayers).map(object => object = {
+            "value": object[0],
+            "id": object[1],
+            "label": object[0]
+          })
+        })
+      })
+    })
   }
 
   confirm() {
-    this.props.handleDelete()
+    console.log(pseuds)
     this.closeModal()
   }
 
   closeModal() {
     $('#confirmModal').removeClass('is-active');
   }
+
+
 
   render() {
     return (<div id="confirmModal" className="modal">
@@ -158,8 +215,17 @@ class ConfirmModal extends React.Component {
         <header className="modal-card-head">
           <p className="modal-card-title">Confirmation</p>
         </header>
-        <section className="modal-card-body">
-          <p>Are you sure that you want to delete this game?</p>
+        <section className="modal-card-body" style={{height: 300}}>
+          {
+              <Dropdown options={this.state.pseudOptions}
+                        onChange={(value) => this.setState({value: value})}
+                        value={this.state.value} placeholder="Select an option" />
+          }
+          {
+            <Dropdown options={this.state.playerOptions}
+                      onChange={(value) => this.setState({value: value})}
+                      value={this.state.value} placeholder="Select an option" />
+          }
         </section>
         <footer className="modal-card-foot">
           <a className="button is-warning" onClick={this.confirm}>Yes</a>
@@ -175,6 +241,9 @@ export default Home;
 export async function saveGames(file, games) {
   console.log(file)
   console.log(games)
+  // TODO check if passing Home instance into non-react function is feasible
+  // homeInstance.openConfirmModal()
+  // Home().openConfirmModal()
   let binaryId = 1
   // saveBinaryFile(file).then ((res) => {
   //     binaryId = res.data
@@ -182,15 +251,6 @@ export async function saveGames(file, games) {
   //     console.log(error)
   // })
   //TODO POST FILE
-  await getPseudonyms().then((res) => {
-    pseuds = createPseudsMap(res.data)
-    console.log(pseuds)
-  })
-
-  await getPlayers().then((res) => {
-    dbPlayers = createPlayersMap(res.data)
-    console.log(dbPlayers)
-  })
 
   for (const game of games) {
     let playerStats = processPlayerStats(game)
@@ -223,13 +283,7 @@ export async function saveGames(file, games) {
       let result = await saveGame(cleanGame).catch((err) => console.log(err))
       let gameId = result[0].id
       await savePlayerStats(gameId, playerStats)
-      console.log("old player stats:")
-      console.log(dbPlayers)
       setPlayersElo(cleanGame, playerStats)
-      console.log("new old player stats:")
-      console.log(dbPlayers)
-      console.log(cleanGame)
-      console.log(playerStats)
     }
   }
 }
@@ -243,6 +297,7 @@ function getPseuds(listOfNicks) {
       //TODO notify if doestn exist in pseuds
       console.log("Unrecognized player name")
       toastr.error("Unrecognized player name")
+      homeInstance.openConfirmModal()
     }
   })
   return listOfIds
