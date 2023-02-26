@@ -6,8 +6,6 @@ import { GridLoadingOverlay } from "@mui/x-data-grid";
 import {Button} from "@mui/material";
 import toastr from "toastr";
 import $ from "jquery";
-import {ELO_VOLATILITY} from "../constants/pages";
-import {white} from "mui/source/styles/colors";
 
 
 export class GameHistory extends React.Component {
@@ -17,7 +15,6 @@ export class GameHistory extends React.Component {
         this.deleteGame = this.deleteGame.bind(this)
         this.getPlayerStats = this.getPlayerStats.bind(this)
         this.openConfirmModal = this.openConfirmModal.bind(this)
-        this.calculatePlayerElo = this.calculatePlayerElo.bind(this)
         this.getTeamNames = this.getTeamNames.bind(this)
 
         this.state = {
@@ -54,34 +51,6 @@ export class GameHistory extends React.Component {
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
                 { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true },
-                {
-                    field: "action",
-                    headerName: "",
-                    width: 85,
-                    sortable: false,
-
-                    renderCell: (params) => {
-                        return (
-                            <strong>
-                                <Button
-                                        style={{
-                                            backgroundColor: "#e8605d", padding: "3px 15px"
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // don't select this row after clicking
-                                            this.setState({selectedRow: params})
-                                            this.openConfirmModal();
-                                        }}
-                                            variant="contained"
-                                            color="primary"
-                                            size="small"
-                                >
-                                    X
-                                </Button>
-                            </strong>
-                        )
-                    }
-                }
             ]
         }
     }
@@ -91,20 +60,12 @@ export class GameHistory extends React.Component {
             this.setState({ players: players.data });
             getGames().then(res => {
                 let games = res.data
-                // for (let i = 0; i < games.length; i++) {
-                //     console.log(games[i])
-                //     games[i].winner = games[i].player_one_win ? games[i].p1_name : games[i].p2_name;
-                //     games[i].rounds = games[i].score.length;
-                //     games[i].formattedScore = games[i].score.map(round => " " + round);
-                //     games[i].formattedDate = games[i].date_played.slice(0, 10) + " " + games[i].date_played.slice(11, 19);
-                // }
                 games.forEach((game) => {
                     game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
                 })
 
                 this.setState({ games: games });
-                //this.calculatePlayerElo(games);
             })
         })
 
@@ -113,7 +74,7 @@ export class GameHistory extends React.Component {
     getTeamNames(members) {
         let names = ''
         for (let i of members) {
-            names += this.state.players[i].name + ', '
+            names += this.state.players.filter(player => player.id === i)[0].name + ', '
         }
         return names.slice(0, -2)
     }
@@ -204,38 +165,6 @@ export class GameHistory extends React.Component {
         return [player_one, player_two]
     }
 
-    calculatePlayerElo(games) {
-        let players = this.state.players
-        players.map(player => player.elo = 1000)
-        for (let i = 0; i < games.length; i++) {
-            let game = games[i]
-            let p1 = players.filter(player => player.id === game.player_one)[0]
-            let p2 = players.filter(player => player.id === game.player_two)[0]
-            let r1 = Math.pow(10, p1.elo / 400)
-            let r2 = Math.pow(10, p2.elo / 400)
-            let e1 = r1 / (r1 + r2)
-            let e2 = r2 / (r2 + r1)
-            let p1_change
-            let p2_change
-            if (game.player_one_win) {
-                p1_change = ELO_VOLATILITY * (1 - e1)
-                p2_change = ELO_VOLATILITY * (0 - e2)
-                p1.elo = parseInt(p1.elo + p1_change)
-                p2.elo = parseInt(p2.elo + p2_change)
-                games[i].elo_change = `+${p1_change.toFixed(1)} / ${p2_change.toFixed(1)}`
-            } else {
-                p1_change = ELO_VOLATILITY * (0 - e1)
-                p2_change = ELO_VOLATILITY * (1 - e2)
-                p1.elo = parseInt(p1.elo + p1_change)
-                p2.elo = parseInt(p2.elo + p2_change)
-                games[i].elo_change = `${p1_change.toFixed(1)} / +${p2_change.toFixed(1)}`
-            }
-            players.map(player => player.id === p1.id ? p1 : player)
-            players.map(player => player.id === p2.id ? p2 : player)
-        }
-        this.setState({players: players, games: games})
-    }
-
     openConfirmModal() {
         $('#confirmModal').addClass('is-active');
     }
@@ -243,7 +172,7 @@ export class GameHistory extends React.Component {
     render() {
         return (
             <div>
-                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%', background: white}}>
+                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '5%', paddingBottom: '10%'}}>
                     <Form.Label>Game History:</Form.Label>
                     {   this.state.games ?
                         <div style={{height: 650, width: '100%'}}>
@@ -252,12 +181,18 @@ export class GameHistory extends React.Component {
                                 columns={this.state.columns}
                                 pageSize={10}
                                 rowsPerPageOptions={[10]}
+                                sx={{
+                                    boxShadow: 10,
+                                    "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                    "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                    "& .css-17jjc08-MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                }}
                                 components={{
                                     NoRowsOverlay: GridLoadingOverlay
                                 }}
                                 initialState={{
                                     sorting: {
-                                        sortModel: [{ field: 'formattedDate', sort: 'desc' }],
+                                        sortModel: [{ field: 'date', sort: 'desc' }],
                                     },
                                 }}
                         />

@@ -32,14 +32,8 @@ app.use(function (req, res, next) {
 });
 
 app.get('/api/games', (req, res) => {
-    let offset = (req.query.page - 1) * 10;
-    let order = req.query.order;
-    let direction = req.query.direction
     db.select('*')
             .from('Games')
-            .orderBy(order, direction)
-            .offset(offset)
-            .limit(10)
             .then((data) => {
                 res.json(data);
             })

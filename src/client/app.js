@@ -2,6 +2,7 @@ import React from "react";
 import {NavBar} from "./pages/navbar";
 import "bulma";
 import "toastr/toastr.scss";
+import "../replay-analyzer/src/App.css"
 import {Redirect, Route, Switch} from "react-router-dom";
 import {PlayerStats} from "./pages/player-stats";
 import {GameHistory} from "./pages/game-history";
