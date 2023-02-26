@@ -22,18 +22,20 @@ export class NavBar extends React.Component {
 
     render() {
         return (
-            <Navbar bg="dark" variant="dark" expand="lg" >
-                <Container>
-                    <Navbar.Brand href={`${this.getHost()}/`}>
-                        <img height={60} width={50} className="img-responsive"  src={Logo} alt=""/>
-                    </Navbar.Brand>
-                    <Nav className="me-auto">
-                        <Nav.Link draggable={false} href={`${this.getHost()}/`}>Game History</Nav.Link>
-                        <Nav.Link draggable={false} href={`${this.getHost()}/record`}>Record Results</Nav.Link>
-                        <Nav.Link draggable={false} href={`${this.getHost()}/stats`}>Player Stats</Nav.Link>
-                    </Nav>
-                </Container>
-            </Navbar>
+            <div>
+                <Navbar bg="dark" variant="dark" expand="lg" >
+                    <Container>
+                        <Navbar.Brand  href={`${this.getHost()}/`}>
+                            <img height={60} width={50} className="img-responsive" src={Logo} alt="" style={{paddingBottom: '0%'}}/>
+                        </Navbar.Brand>
+                        <Nav className="me-auto">
+                            <Nav.Link draggable={false} href={`${this.getHost()}/stats`}>Player Stats</Nav.Link>
+                            <Nav.Link draggable={false} href={`${this.getHost()}/`}>Game History</Nav.Link>
+                            <Nav.Link draggable={false} href={`${this.getHost()}/record`}>Record Results</Nav.Link>
+                        </Nav>
+                    </Container>
+                </Navbar>
+            </div>
         )
     }
 }

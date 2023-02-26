@@ -11,11 +11,17 @@ const db = knex({
     },
 });
 
-async function binary(req, res) {
-    console.log("api/binary endpoint hit in serverless function")
+async function playerGameStats(req, res) {
+    console.log("api/playerGameStats endpoint hit in serverless function")
     if (req.method === 'GET') {
+        let playerId = req.query.player_id;
+        let gameId = req.query.game_id
         db.select('*')
-            .from('Binaries')
+            .from('PlayerGameStats')
+            .where({
+                game_id: gameId,
+                player_id: playerId
+            })
             .then((data) => {
                 res.json(data);
             })
@@ -23,10 +29,18 @@ async function binary(req, res) {
                 console.log(err);
             });
     } else if (req.method === 'POST') {
-        let file = req.body.file
-        db('Binaries').insert(
+        let player = req.body.playerGameStats
+        db('PlayerGameStats').insert(
             {
-                file: file
+                game_id: player.game_id,
+                player_id: player.player_id,
+                goals: player.goals,
+                assists: player.assists,
+                kicks: player.kicks,
+                passes: player.passes,
+                shots_on_goal: player.shots_on_goal,
+                own_goals: player.own_goals,
+                won: player.won
             })
             .then((data) => {
                 console.log(data)
@@ -36,8 +50,11 @@ async function binary(req, res) {
                 console.log(err);
             });
     } else if (req.method === 'DELETE') {
-        let id = req.body.id
-        db('Binaries').where({id: id}).del()
+        let gameId = req.body.game_id
+        let playerId = req.body.player_id
+        db('PlayerGameStats').where({
+            player_id: playerId,
+            game_id: gameId}).del()
             .then((data) => {
                 res.json(data)
             }).catch((err) => {
@@ -49,4 +66,4 @@ async function binary(req, res) {
     }
 }
 
-export default binary;
+export default playerGameStats;

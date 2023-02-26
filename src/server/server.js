@@ -32,14 +32,8 @@ app.use(function (req, res, next) {
 });
 
 app.get('/api/games', (req, res) => {
-    let offset = (req.query.page - 1) * 10;
-    let order = req.query.order;
-    let direction = req.query.direction
     db.select('*')
             .from('Games')
-            .orderBy(order, direction)
-            .offset(offset)
-            .limit(10)
             .then((data) => {
                 res.json(data);
             })
@@ -67,6 +61,8 @@ app.post('/api/games', (req, res) => {
             })
             .catch((err) => {
                 console.log(err);
+                res.statusMessage = "Unique key restraint violated"
+                res.status(500).json({"string": "String"}).end()
             });
 })
 
@@ -77,7 +73,8 @@ app.delete('/api/games', (req, res) => {
                 res.json(data)
             }).catch((err) => {
                 console.log(err)
-                res.status(500).message(err)
+                res.statusMessage = "Server error deleting game"
+                res.status(500).end()
     })
 })
 
@@ -211,7 +208,7 @@ app.delete('/api/binary', (req, res) => {
             res.json(data)
         }).catch((err) => {
         console.log(err)
-        res.status(500).message(err)
+        res.status(500).end(err)
     })
 })
 
@@ -223,6 +220,7 @@ app.get('/api/pseudonyms', (req, res) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(500).end(err)
         });
 })
 
@@ -238,7 +236,22 @@ app.post('/api/pseudonyms', (req, res) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(500).end(err)
         });
+})
+
+app.put('/api/playerElo', (req, res) => {
+    let elo = req.body.elo;
+    let id = req.body.id;
+    db('Players').where({id: id})
+        .update({
+            elo: elo,
+        })
+        .then((data) => {
+            res.json(data);
+        }).catch((err) => {
+        res.status(500).end(err)
+    })
 })
 
 app.listen(port, () => {

@@ -1,8 +1,7 @@
 import React from "react";
-import {getGames, getPlayers} from "../services/api";
+import {getPlayers} from "../services/api";
 import {DataGrid, GridLoadingOverlay} from '@mui/x-data-grid';
 import {Form} from "react-bootstrap";
-import {ELO_VOLATILITY} from "../constants/pages";
 import toastr from "toastr";
 
 
@@ -10,10 +9,9 @@ export class PlayerStats extends React.Component {
 
     constructor(props) {
         super(props);
-        this.calculatePlayerElo = this.calculatePlayerElo.bind(this)
         this.state = {
             games: [],
-            players: null,
+            players: [],
             columns: [
                 { field: 'name', headerName: 'Name', width: 150 },
                 { field: 'elo', headerName: 'ELO', width: 100 },
@@ -32,7 +30,7 @@ export class PlayerStats extends React.Component {
                 { field: 'kicks', headerName: 'Kicks', width: 100 },
                 { field: 'passes', headerName: 'Passes', width: 100 },
                 { field: 'own_goals', headerName: 'Own Goals', width: 100 },
-                { field: 'shots_on_goal', headerName: 'Shots on Goal', width: 100 },
+                { field: 'shots_on_goal', headerName: 'Shots on Goal', width: 120 },
             ]
         }
     }
@@ -47,29 +45,6 @@ export class PlayerStats extends React.Component {
         })
     }
 
-    calculatePlayerElo(games) {
-        let players = this.state.players
-        players.map(player => player.elo = 1000)
-        for (let game of games) {
-            let p1 = players.filter(player => player.id === game.player_one)[0]
-            let p2 = players.filter(player => player.id === game.player_two)[0]
-            let r1 = Math.pow(10, p1.elo / 400)
-            let r2 = Math.pow(10, p2.elo / 400)
-            let e1 = r1 / (r1 + r2)
-            let e2 = r2 / (r2 + r1)
-            if (game.player_one_win) {
-                p1.elo = parseInt(p1.elo + ELO_VOLATILITY * (1 - e1))
-                p2.elo = parseInt(p2.elo + ELO_VOLATILITY * (0 - e2))
-            } else {
-                p1.elo = parseInt(p1.elo + ELO_VOLATILITY * (0 - e1))
-                p2.elo = parseInt(p2.elo + ELO_VOLATILITY * (1 - e2))
-            }
-            players.map(player => player.id === p1.id ? p1 : player)
-            players.map(player => player.id === p2.id ? p2 : player)
-        }
-        this.setState({players: players})
-    }
-
     getWinLossRatio(won, played) {
         let wlr = 0
         if (won !== 0) {
@@ -80,16 +55,21 @@ export class PlayerStats extends React.Component {
 
     render() {
         return (
-            <Form style={{paddingLeft: '10%', paddingRight: '10%', paddingTop: '5%'}}>
-                <Form.Label>Scoreboard:</Form.Label>
-                {   this.state.players && this.state.players.length !== 0 && this.state.players[0].elo ?
-                    <div style={{height: 650, width: '100%'}}>
+            <Form style={{paddingLeft: '10%', paddingRight: '10%', paddingTop: '7%', paddingBottom: '25%'}}>
+                {   this.state.players ?
+                    <div style={{height: 525, width: '100%'}}>
                         <DataGrid
                             rows={this.state.players}
                             columns={this.state.columns}
                             pageSize={10}
                             components={{
                                 NoRowsOverlay: GridLoadingOverlay
+                            }}
+                            sx={{
+                                boxShadow: 10,
+                                "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                "& .css-17jjc08-MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                             }}
                             sortingOrder={['asc', 'desc']}
                             rowsPerPageOptions={[10]}
@@ -100,17 +80,7 @@ export class PlayerStats extends React.Component {
                             }}
                         />
                     </div> :
-                        <div style={{height: 450, width: '100%'}}>
-                            <DataGrid
-                                    rows={[]}
-                                    columns={this.state.columns}
-                                    pageSize={10}
-                                    components={{
-                                        NoRowsOverlay: GridLoadingOverlay
-                                    }}
-                                    rowsPerPageOptions={[10]}
-                            />
-                        </div>}
+                        null}
             </Form>
         )
     }

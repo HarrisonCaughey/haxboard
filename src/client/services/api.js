@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const serverPath = process.env.NODE_ENV !== 'development' ? "https://haxboard.vercel.app" : 'http://localhost:3001';
 
-export function getGames(page = 1, direction = "ASC", order = "date") {
-    return axios.get(`${serverPath}/api/games`, { params: { page: page, direction: direction, order: order } })
+export function getGames() {
+    return axios.get(`${serverPath}/api/games`, )
         .then((games) => {
             return games;
         }).catch((err) => {
@@ -108,6 +108,13 @@ export function saveBinaryFile(file) {
 
 export function deleteBinaryFile(id) {
     return axios.delete(`${serverPath}/api/binary`, { data: {id: id} })
+        .catch((err) => {
+            console.error(err);
+        })
+}
+
+export function updatePlayerElo(elo, id) {
+    return axios.put(`${serverPath}/api/playerElo`, {elo: elo, id: id})
         .catch((err) => {
             console.error(err);
         })

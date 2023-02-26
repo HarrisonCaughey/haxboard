@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { setMainMode } from "../../slices/mainModeSlice";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import PlayerStats from "./PlayerStats";
 import ThirdStats from "./ThirdStats";
 import { watchGoal } from "../../game2";

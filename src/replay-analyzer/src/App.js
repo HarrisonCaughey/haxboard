@@ -1,9 +1,9 @@
-import './App.css';
 import Home from './components/Home';
 import React, { useEffect } from 'react';
 import $ from 'jquery'
 import store from "./store";
 import {Provider} from "react-redux";
+
 
 const ReplayWrapper = () => {
 

@@ -1,3 +1,5 @@
+/* eslint-disable no-redeclare */
+
 import { useSelector, useDispatch } from "react-redux";
 import { selectStat, selectPlayer } from "../../slices/gameStatsSlice";
 import React from "react";

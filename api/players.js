@@ -1,80 +1,57 @@
-const { Pool } = require('pg')
+const knex = require('knex');
+require('dotenv').config();
 
-const pool = new Pool({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE,
-    port: process.env.DATABASE_PORT
-})
-
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err)
-    process.exit(-1)
-})
+const db = knex({
+    client: 'pg',
+    connection: {
+        host: process.env.DATABASE_HOST,
+        user: process.env.DATABASE_USERNAME,
+        password: process.env.DATABASE_PASSWORD,
+        database: process.env.DATABASE,
+        port: process.env.PORT,
+    },
+});
 
 async function players(req, res) {
     console.log("api/players endpoint hit in serverless function")
     if (req.method === 'GET') {
-        pool.connect((err, client, done) => {
-            if (err) throw err
-            client.query(
-                    'SELECT * FROM public."Players"', (err, data) => {
-                        done()
-                        if (err) {
-                            console.log(err.stack)
-                            res.status(500).message(err)
-                        } else {
-
-                            res.status(200).json(data.rows)
-                        }
-                    })
-        })
+        db.select('*')
+            .from('Players')
+            .then((data) => {
+                res.json(data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     } else if (req.method === 'PUT') {
-        pool.connect((err, client, done) => {
-            if (err) throw err
-            let player = req.body.player;
-            let id = req.body.id;
-            client.query(
-                'UPDATE public."Players" ' +
-                'SET games_played=$2, games_won=$3, elo=$4, mvps=$5, goals=$6, assists=$7, kicks=$8, ' +
-                'passes=$9, shots_on_goal=$10, own_goals=$11 ' +
-                'WHERE id = $12;',
-                [player.games_played, player.games_won, player.elo, player.mvps, player.goals,
-                    player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals, id],
-                (err, data) => {
-                    done()
-                    if (err) {
-                        console.log(err.stack)
-                        res.status(500).message(err)
-                    } else {
-                        console.log("Player information updated")
-                        res.send(204)
-                    }
-                })
+        let player = req.body.player;
+        let id = req.body.id;
+        db('Players').where({id: id})
+            .update({
+                name: player.name,
+                games_played: player.games_played,
+                games_won: player.games_won,
+                elo: player.elo,
+                mvps: player.mvps,
+                goals: player.goals,
+                assists: player.assists,
+                kicks: player.kicks,
+                passes: player.passes,
+                shots_on_goal: player.shots_on_goal,
+                own_goals: player.own_goals
+            })
+            .then((data) => {
+                res.json(data);
+            }).catch((err) => {
+            console.log(err)
         })
     } else if (req.method === 'POST') {
-        pool.connect((err, client, done) => {
-            if (err) throw err
-            let player = req.body.player;
-            client.query(
-                'INSERT INTO public."Players" ' +
-                '(name, games_played, games_won, elo, mvps, goals, assists, kicks, ' +
-                'passes, shots_on_goal, own_goals) ' +
-                'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11); ' +
-                'SELECT SCOPE_IDENTITY();',
-                [player.name, player.games_played, player.games_won, player.elo, player.mvps, player.goals,
-                    player.assists, player.kicks, player.passes, player.shots_on_goal, player.own_goals],
-                (err, data) => {
-                    done()
-                    if (err) {
-                        console.log(err.stack)
-                        res.status(500).message(err)
-                    } else {
-                        console.log("Player information updated")
-                        res.status(204).json(data.rows)
-                    }
-                })
+        let player = req.body.player;
+        db('Players').insert(player, 'id')
+            .then((data) => {
+                res.json(data);
+            }).catch((err) => {
+            console.log(err)
         })
     } else {
         res.status(400).send("Method not allowed");
