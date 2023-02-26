@@ -427,7 +427,7 @@ function createPlayersMap(data) {
 }
 
 function setPlayersElo(game) {
-  eloAlgorithm1(game)
+  eloAlgorithm3(game)
 }
 
 // Classical chess elo adjusted distribute elo to team members based on their perceived contribution to the game
@@ -466,6 +466,7 @@ function eloAlgorithm1(game) {
 }
 
 // Classical chess elo adjusted to distribute elo to team members evenly
+// Net elo gain/loss is calculated on a team v team basis
 function eloAlgorithm2(game) {
   let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
   let winners = winnerStr === "red" ? game.red_team : game.blue_team;
@@ -487,13 +488,52 @@ function eloAlgorithm2(game) {
   for (let i = 0; i < winners.length; i++) {
     let winner = winners[i]
     let individualElo = dbPlayers[winner].elo
-    individualElo = Math.ceil(individualElo + ((ELO_VOLATILITY * (1 - e1)) / winners.length))
+    individualElo = Math.round(individualElo + ((ELO_VOLATILITY * (1 - e1)) / winners.length))
     dbPlayers[winner].elo = individualElo
   }
   for (let i = 0; i < losers.length; i++) {
     let loser = losers[i]
     let individualElo = dbPlayers[loser].elo
-    individualElo = Math.ceil(individualElo - ((ELO_VOLATILITY * (1 - e2)) / losers.length))
+    individualElo = Math.round(individualElo - ((ELO_VOLATILITY * (1 - e2)) / losers.length))
+    dbPlayers[loser].elo = individualElo
+  }
+}
+
+// Classical chess elo adjusted to distribute elo based on each players elo vs the average elo of the opposing team
+function eloAlgorithm3(game) {
+  let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
+  let winners = winnerStr === "red" ? game.red_team : game.blue_team;
+  let losers = winnerStr === "red" ? game.blue_team : game.red_team;
+  let redTeamElo = 0;
+  let blueTeamElo = 0;
+  for (let i = 0; i < game.red_team.length; i++) {
+    const id = game.red_team[i]
+    redTeamElo += dbPlayers[id].elo
+  }
+  for (let i = 0; i < game.blue_team.length; i++) {
+    const id = game.blue_team[i]
+    blueTeamElo += dbPlayers[id].elo
+  }
+  let redTeamAverage = redTeamElo / game.red_team.length
+  let blueTeamAverage = blueTeamElo / game.blue_team.length
+  for (let i = 0; i < winners.length; i++) {
+    let winner = winners[i]
+    let oppositionElo = winnerStr === "blue" ? redTeamAverage : blueTeamAverage
+    let individualElo = dbPlayers[winner].elo
+    let r1 = Math.pow(10, individualElo / 400)
+    let r2 = Math.pow(10, oppositionElo / 400)
+    let e1 = r1 / (r1 + r2)
+    individualElo = Math.round(individualElo + (ELO_VOLATILITY * (1 - e1)))
+    dbPlayers[winner].elo = individualElo
+  }
+  for (let i = 0; i < losers.length; i++) {
+    let loser = losers[i]
+    let oppositionElo = winnerStr === "red" ? redTeamAverage : blueTeamAverage
+    let individualElo = dbPlayers[loser].elo
+    let r1 = Math.pow(10, individualElo / 400)
+    let r2 = Math.pow(10, oppositionElo / 400)
+    let e2 = r2 / (r1 + r2)
+    individualElo = Math.round(individualElo - (ELO_VOLATILITY * (1 - e2)))
     dbPlayers[loser].elo = individualElo
   }
 }
@@ -507,7 +547,7 @@ async function recalculateElo() {
     }
     getGames().then(async res => {
       for (const game of res.data) {
-        eloAlgorithm2(game)
+        eloAlgorithm3(game)
       }
       await pushEloToDatabase()
     })
