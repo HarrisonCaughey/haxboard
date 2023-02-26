@@ -1,6 +1,6 @@
 import React from "react";
 import {Form} from "react-bootstrap";
-import {getGames, deleteGame, getPlayers, updatePlayer} from "../services/api";
+import {getGames, getPlayers, updatePlayer} from "../services/api";
 import { DataGrid } from '@mui/x-data-grid';
 import { GridLoadingOverlay } from "@mui/x-data-grid";
 import {Button} from "@mui/material";
@@ -12,10 +12,9 @@ export class GameHistory extends React.Component {
 
     constructor(props) {
         super(props);
-        this.deleteGame = this.deleteGame.bind(this)
-        this.getPlayerStats = this.getPlayerStats.bind(this)
         this.openConfirmModal = this.openConfirmModal.bind(this)
         this.getTeamNames = this.getTeamNames.bind(this)
+        this.handleClick = this.handleClick.bind(this)
 
         this.state = {
             games: [],
@@ -64,11 +63,9 @@ export class GameHistory extends React.Component {
                     game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
                 })
-
                 this.setState({ games: games });
             })
         })
-
     }
 
     getTeamNames(members) {
@@ -86,87 +83,12 @@ export class GameHistory extends React.Component {
         return "" + mins + ":" + gt;
     }
 
-
-    deleteGame() {
-        let params = this.state.selectedRow
-        let id = params.id
-        let game = params.row
-        try {
-            deleteGame(id).then((res) => {
-                if (res.status === 500) {
-                    toastr.error("Server error when deleting game")
-                    return
-                }
-                // Update player info
-                let [player_one, player_two] = this.getPlayerStats(game);
-                let p1_id = player_one.id
-                let p2_id = player_two.id
-                delete player_one.id
-                delete player_two.id;
-                updatePlayer(player_one, p1_id).then(() => {
-                    updatePlayer(player_two, p2_id).then(() => {
-                        let games = this.state.games.filter(game => game.id !== id)
-                        this.setState({games: games})
-                        toastr.success("Game successfully deleted")
-                    })
-                }).catch(() => {
-                    toastr.error("Unhandled error when updating player stats")
-                })
-            })
-        }
-        catch {
-            toastr.error("Error recording game")
-        }
-    }
-
-    getPlayerStats(game) {
-        let player_one = structuredClone(this.state.players.filter(player => player.id === game.player_one)[0])
-        let player_two = structuredClone(this.state.players.filter(player => player.id === game.player_two)[0])
-        if (game.player_one_win) {
-            player_one.games_won--
-            player_two.games_lost--
-        } else {
-            player_two.games_won--
-            player_one.games_lost--
-        }
-        let p1RoundsWon = 0
-        let p2RoundsWon = 0
-        let p1PointsWon = 0
-        let p2PointsWon = 0
-        for (let i = 0; i < game.score.length; i++) {
-            let round = game.score[i]
-            let [score1, score2] = round.split('-')
-            p1PointsWon += parseInt(score1)
-            p2PointsWon += parseInt(score2)
-            if (score1 > score2) {
-                p1RoundsWon++;
-            } else {
-                p2RoundsWon++;
-            }
-        }
-        player_one.rounds_won -= p1RoundsWon;
-        player_one.rounds_lost -= p2RoundsWon;
-        player_two.rounds_won -= p2RoundsWon;
-        player_two.rounds_lost -= p1RoundsWon;
-        player_one.points_won -= p1PointsWon;
-        player_one.points_lost -= p2PointsWon;
-        player_two.points_won -= p2PointsWon;
-        player_two.points_lost -= p1PointsWon;
-        delete player_one.label;
-        delete player_one.name;
-        delete player_one.game_history;
-        delete player_one.value;
-        delete player_one.elo
-        delete player_two.label;
-        delete player_two.name;
-        delete player_two.game_history;
-        delete player_two.value;
-        delete player_two.elo
-        return [player_one, player_two]
-    }
-
     openConfirmModal() {
         $('#confirmModal').addClass('is-active');
+    }
+
+    handleClick() {
+        return null
     }
 
     render() {
@@ -197,7 +119,7 @@ export class GameHistory extends React.Component {
                         />
                     </div> : null}
                 </Form>
-                {<ConfirmModal handleDelete={this.deleteGame}/>}
+                {<ConfirmModal handleClick={this.handleClick}/>}
             </div>
         )
     }
@@ -213,7 +135,7 @@ class ConfirmModal extends React.Component {
     }
 
     confirm() {
-        this.props.handleDelete()
+        this.props.handleClick()
         this.closeModal()
     }
 

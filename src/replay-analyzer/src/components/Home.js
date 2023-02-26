@@ -283,13 +283,13 @@ export async function saveGames(file, games) {
     if (checkGameValidity(cleanGame)) {
       await saveGame(cleanGame).then(async (result) => {
         let gameId = result[0].id
-        await savePlayerStats(gameId, playerStats)
         setPlayersElo(cleanGame)
+        await savePlayerStats(gameId, playerStats)
         toastr.success(`Saved Game ${i}`)
         i++
       }).catch((err) => {
-        toastr.error(`Failed saving Game ${i}`)
-        console.log(err)
+        // TODO: make specific error for duplicate games
+        toastr.error(`Failed saving Game ${i}. It's probably a duplicate`)
         i++
       })
     }

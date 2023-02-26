@@ -61,6 +61,8 @@ app.post('/api/games', (req, res) => {
             })
             .catch((err) => {
                 console.log(err);
+                res.statusMessage = "Unique key restraint violated"
+                res.status(500).json({"string": "String"}).end()
             });
 })
 
@@ -71,7 +73,8 @@ app.delete('/api/games', (req, res) => {
                 res.json(data)
             }).catch((err) => {
                 console.log(err)
-                res.status(500).message(err)
+                res.statusMessage = "Server error deleting game"
+                res.status(500).end()
     })
 })
 
@@ -205,7 +208,7 @@ app.delete('/api/binary', (req, res) => {
             res.json(data)
         }).catch((err) => {
         console.log(err)
-        res.status(500).message(err)
+        res.status(500).end(err)
     })
 })
 
@@ -217,6 +220,7 @@ app.get('/api/pseudonyms', (req, res) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(500).end(err)
         });
 })
 
@@ -232,6 +236,7 @@ app.post('/api/pseudonyms', (req, res) => {
         })
         .catch((err) => {
             console.log(err);
+            res.status(500).end(err)
         });
 })
 
@@ -245,7 +250,7 @@ app.put('/api/playerElo', (req, res) => {
         .then((data) => {
             res.json(data);
         }).catch((err) => {
-        console.log(err)
+        res.status(500).end(err)
     })
 })
 

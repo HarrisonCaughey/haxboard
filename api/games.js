@@ -57,6 +57,8 @@ async function games(req, res) {
             })
             .catch((err) => {
                 console.log(err);
+                res.statusMessage = "Unique key constraint violated"
+                res.status(500).end()
             });
     } else if (req.method === 'DELETE') {
         let id = req.body.id
@@ -65,7 +67,7 @@ async function games(req, res) {
                 res.json(data)
             }).catch((err) => {
             console.log(err)
-            res.status(500).message(err)
+            res.status(500).end()
         })
     } else {
         res.status(400).send("Method not allowed");
