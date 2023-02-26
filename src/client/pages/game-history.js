@@ -18,19 +18,42 @@ export class GameHistory extends React.Component {
         this.getPlayerStats = this.getPlayerStats.bind(this)
         this.openConfirmModal = this.openConfirmModal.bind(this)
         this.calculatePlayerElo = this.calculatePlayerElo.bind(this)
+        this.getTeamNames = this.getTeamNames.bind(this)
 
         this.state = {
             games: [],
             players: null,
             columns: [
                 { field: 'date', headerName: 'Date', width: 100, sortable: true },
-                { field: 'game_time', headerName: 'Game Time', width: 60, sortable: true },
-                { field: 'red_team_names', headerName: 'Red Team', width: 250, sortable: false },
+                { field: 'game_time', headerName: 'Length', width: 70, sortable: true },
+                {
+                    field: 'winners',
+                    headerName: 'Winners',
+                    width: 70,
+                    sortable: false,
+                    valueGetter: (params) =>
+                        `${params.row.red_score > params.row.blue_score ? "Red" : "Blue"}`,
+                },
+                {
+                    field: 'red_team_names',
+                    headerName: 'Red Team',
+                    width: 200,
+                    sortable: false,
+                    valueGetter: (params) =>
+                        `${this.getTeamNames(params.row.red_team)}`,
+                },
+                {
+                    field: 'blue_team_names',
+                    headerName: 'Blue Team',
+                    width: 200,
+                    sortable: false,
+                    valueGetter: (params) =>
+                        `${this.getTeamNames(params.row.blue_team)}`,
+                },
                 { field: 'red_possession', headerName: 'R%', width: 40, sortable: true },
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
                 { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true },
-                { field: 'blue_team_names', headerName: 'Blue Team', width: 250, sortable: false },
                 {
                     field: "action",
                     headerName: "",
@@ -85,6 +108,14 @@ export class GameHistory extends React.Component {
             })
         })
 
+    }
+
+    getTeamNames(members) {
+        let names = ''
+        for (let i of members) {
+            names += this.state.players[i].name + ', '
+        }
+        return names.slice(0, -2)
     }
 
     parseTime(gt) {
