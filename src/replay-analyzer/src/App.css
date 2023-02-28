@@ -3375,3 +3375,14 @@ a:hover {
   /* Support for IE. */
   font-feature-settings: 'liga';
 }
+
+
+
+
+
+
+
+/* Haxboard shit */
+.glowing-cell{
+  background-color: rgba(250, 203, 42, 0.4) !important;
+}

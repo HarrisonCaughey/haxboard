@@ -69,7 +69,7 @@ export class PlayerStats extends React.Component {
                                 boxShadow: 10,
                                 "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                 "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
-                                "& .css-17jjc08-MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                "& .MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                             }}
                             sortingOrder={['asc', 'desc']}
                             rowsPerPageOptions={[10]}

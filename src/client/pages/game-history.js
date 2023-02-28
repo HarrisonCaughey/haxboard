@@ -6,6 +6,7 @@ import { GridLoadingOverlay } from "@mui/x-data-grid";
 import {Button} from "@mui/material";
 import toastr from "toastr";
 import $ from "jquery";
+import clsx from "clsx";
 
 
 export class GameHistory extends React.Component {
@@ -23,20 +24,15 @@ export class GameHistory extends React.Component {
                 { field: 'date', headerName: 'Date', width: 100, sortable: true },
                 { field: 'game_time', headerName: 'Length', width: 70, sortable: true },
                 {
-                    field: 'winners',
-                    headerName: 'Winners',
-                    width: 70,
-                    sortable: false,
-                    valueGetter: (params) =>
-                        `${params.row.red_score > params.row.blue_score ? "Red" : "Blue"}`,
-                },
-                {
                     field: 'red_team_names',
                     headerName: 'Red Team',
                     width: 200,
                     sortable: false,
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.red_team)}`,
+                    cellClassName: (params) => {
+                        return params.row.red_score > params.row.blue_score ? "glowing-cell" : null
+                    }
                 },
                 {
                     field: 'blue_team_names',
@@ -45,6 +41,10 @@ export class GameHistory extends React.Component {
                     sortable: false,
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.blue_team)}`,
+                    cellClassName: (params) => {
+                        return params.row.blue_score > params.row.red_score ? "glowing-cell" : null
+                    }
+
                 },
                 { field: 'red_possession', headerName: 'R%', width: 40, sortable: true },
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
@@ -96,7 +96,7 @@ export class GameHistory extends React.Component {
             <div>
                 <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '7%', paddingBottom: '10%'}}>
                     {   this.state.games ?
-                        <div style={{height: 650, width: '100%'}}>
+                        <div style={{height: 630.5, width: '100%'}}>
                         <DataGrid
                                 rows={this.state.games}
                                 columns={this.state.columns}
@@ -106,7 +106,7 @@ export class GameHistory extends React.Component {
                                     boxShadow: 10,
                                     "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                     "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
-                                    "& .css-17jjc08-MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                    "& .MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                 }}
                                 components={{
                                     NoRowsOverlay: GridLoadingOverlay
