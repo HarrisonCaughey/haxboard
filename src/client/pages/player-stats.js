@@ -13,8 +13,8 @@ export class PlayerStats extends React.Component {
             games: [],
             players: [],
             columns: [
-                { field: 'name', headerName: 'Name', width: 150 },
-                { field: 'elo', headerName: 'ELO', width: 100 },
+                { field: 'name', headerName: 'Name', width: 150, sortingOrder: ['desc', 'asc'] },
+                { field: 'elo', headerName: 'ELO', width: 100, sortingOrder: ['desc', 'asc'] },
                 {
                     field: 'wlr',
                     headerName: 'Win/Loss Ratio',
@@ -22,15 +22,16 @@ export class PlayerStats extends React.Component {
                     valueGetter: (params) =>
                             `${this.getWinLossRatio(params.row.games_won, params.row.games_played)}%`,
                     sortComparator: this.percentageComparator,
+                    sortingOrder: ['desc', 'asc']
                 },
-                { field: 'games_played', headerName: 'P', width: 100 },
-                { field: 'games_won', headerName: 'W', width: 100 },
-                { field: 'goals', headerName: 'Goals', width: 100 },
-                { field: 'assists', headerName: 'Assists', width: 100 },
-                { field: 'kicks', headerName: 'Kicks', width: 100 },
-                { field: 'passes', headerName: 'Passes', width: 100 },
-                { field: 'own_goals', headerName: 'Own Goals', width: 100 },
-                { field: 'shots_on_goal', headerName: 'Shots on Goal', width: 120 },
+                { field: 'games_played', headerName: 'P', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'games_won', headerName: 'W', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'goals', headerName: 'Goals', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'assists', headerName: 'Assists', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'kicks', headerName: 'Kicks', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'passes', headerName: 'Passes', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'own_goals', headerName: 'Own Goals', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'shots_on_goal', headerName: 'Shots on Goal', width: 120, sortingOrder: ['desc', 'asc'] },
             ]
         }
     }

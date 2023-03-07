@@ -21,13 +21,28 @@ export class GameHistory extends React.Component {
             games: [],
             players: null,
             columns: [
-                { field: 'date', headerName: 'Date', width: 100, sortable: true },
-                { field: 'game_time', headerName: 'Length', width: 70, sortable: true },
+                {
+                    field: 'date',
+                    headerName: 'Date',
+                    width: 100,
+                    sortable: true,
+                    sortingOrder: ['desc', 'asc'],
+                    valueGetter: (params) => ({
+                            date: params.row.date,
+                            id: params.id
+                        }),
+                    valueFormatter: (params) => {
+                        return params.value.date
+                    },
+                    sortComparator: this.dateComparator
+                },
+                { field: 'game_time', headerName: 'Length', width: 70, sortable: true, sortingOrder: ['desc', 'asc'] },
                 {
                     field: 'red_team_names',
                     headerName: 'Red Team',
                     width: 200,
                     sortable: false,
+                    sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.red_team)}`,
                     cellClassName: (params) => {
@@ -39,6 +54,7 @@ export class GameHistory extends React.Component {
                     headerName: 'Blue Team',
                     width: 200,
                     sortable: false,
+                     sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.blue_team)}`,
                     cellClassName: (params) => {
@@ -46,10 +62,10 @@ export class GameHistory extends React.Component {
                     }
 
                 },
-                { field: 'red_possession', headerName: 'R%', width: 40, sortable: true },
+                { field: 'red_possession', headerName: 'R%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
-                { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true },
+                { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
             ]
         }
     }
@@ -67,6 +83,8 @@ export class GameHistory extends React.Component {
             })
         })
     }
+
+    dateComparator = (v1, v2, param1, param2) => param1.id - param2.id
 
     getTeamNames(members) {
         let names = ''
