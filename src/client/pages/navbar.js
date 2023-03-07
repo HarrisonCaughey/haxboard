@@ -32,6 +32,7 @@ export class NavBar extends React.Component {
                             <Nav.Link draggable={false} href={`${this.getHost()}/stats`}>Player Stats</Nav.Link>
                             <Nav.Link draggable={false} href={`${this.getHost()}/`}>Game History</Nav.Link>
                             <Nav.Link draggable={false} href={`${this.getHost()}/record`}>Record Results</Nav.Link>
+                            <Nav.Link draggable={false} href={`${this.getHost()}/compare`}>Detailed Comparison</Nav.Link>
                         </Nav>
                     </Container>
                 </Navbar>

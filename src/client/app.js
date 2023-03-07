@@ -7,6 +7,7 @@ import {Redirect, Route, Switch} from "react-router-dom";
 import {PlayerStats} from "./pages/player-stats";
 import {GameHistory} from "./pages/game-history";
 import ReplayWrapper from "../replay-analyzer/src/App";
+import {PlayerComparison} from "./pages/player-comparison";
 
 export class App extends React.Component {
 
@@ -20,6 +21,7 @@ export class App extends React.Component {
             <Switch>
                 <Route path="/record" component={ReplayWrapper}/>
                 <Route path="/stats" component={PlayerStats}/>
+                <Route path="/compare" component={PlayerComparison}/>
                 <Route exact path="/" component={GameHistory}/>
                 <Redirect to={"/"} />
             </Switch>
