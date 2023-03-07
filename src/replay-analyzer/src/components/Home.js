@@ -323,7 +323,7 @@ function getDateFromFile(file) {
 function checkGameValidity(game) {
   // score check
   if (game.red_score === game.blue_score) return false;
-  if (game.red_score < 3 && game.blue_score < 3) return false;
+  if (game.red_score < 1 && game.blue_score < 1) return false;
   if (game.red_score > 5 || game.blue_score > 5) return false;
   //player check
   if (game.red_team.length !== game.blue_team.length) return false;
