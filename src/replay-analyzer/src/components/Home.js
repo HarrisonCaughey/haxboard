@@ -260,12 +260,12 @@ export async function saveGames(file, games) {
     //filter out from game and gamestats non-playing players  ////////////////////////////
 
     playerStats.forEach(player => {
-      if (player.kicks < 7) {
+      if (player.kicks < 5) {
         game.redTeam = game.redTeam.filter(nick => nick !== player.nick)
         game.blueTeam = game.blueTeam.filter(nick => nick !== player.nick)
       }
     })
-    playerStats = playerStats.filter(player => player.kicks >= 7)
+    playerStats = playerStats.filter(player => player.kicks >= 5)
 
     ////////////////////////////////////////////////////////////////////////////////////
 
