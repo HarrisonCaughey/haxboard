@@ -265,7 +265,7 @@ export async function saveGames(file, games) {
         game.blueTeam = game.blueTeam.filter(nick => nick !== player.nick)
       }
     })
-    playerStats = playerStats.filter(player => player.kicks >= 5)
+    playerStats = playerStats.filter(player => player.kicks >= 7)
 
     ////////////////////////////////////////////////////////////////////////////////////
 
