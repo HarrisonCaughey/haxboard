@@ -18,6 +18,8 @@ import toastr from "toastr";
 import $ from "jquery";
 import { withTheme } from '@material-ui/core/styles';
 import {blue100} from "mui/source/styles/colors";
+import {IconButton} from "@mui/material";
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 
 export class PlayerComparison extends React.Component {
 
@@ -31,6 +33,11 @@ export class PlayerComparison extends React.Component {
         this.handleChangeTeam2 = this.handleChangeTeam2.bind(this)
         this.handleChangeTeam2Relations = this.handleChangeTeam2Relations.bind(this)
         this.getStyles = this.getStyles.bind(this)
+        this.filterGames = this.filterGames.bind(this)
+        this.filterTeam1 = this.filterTeam1.bind(this)
+        this.filterTeam2 = this.filterTeam2.bind(this)
+        this.exactFilter = this.exactFilter.bind(this)
+        this.containsFilter = this.containsFilter.bind(this)
 
         this.state = {
             games: [],
@@ -38,8 +45,8 @@ export class PlayerComparison extends React.Component {
             players: null,
             team1: [],
             team2: [],
-            team1Relation: "",
-            team2Relation: "",
+            team1Relation: "contains",
+            team2Relation: "contains",
             columns: [
                 {
                     field: 'date',
@@ -99,7 +106,7 @@ export class PlayerComparison extends React.Component {
                     game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
                 })
-                this.setState({ games: games });
+                this.setState({ games: games, filteredGames: games });
             })
         })
     }
@@ -127,6 +134,36 @@ export class PlayerComparison extends React.Component {
 
     handleClick() {
         return null
+    }
+
+    filterGames() {
+        let games = this.state.games
+        this.filterTeam1(games)
+        this.filterTeam2(games)
+    }
+
+    filterTeam1(games) {
+        if (this.state.team1Relation === "contains") {
+            this.containsFilter(games, this.state.team1)
+        } else {
+            this.exactFilter(games, this.state.team1)
+        }
+    }
+
+    filterTeam2(games) {
+        if (this.state.team2Relation === "contains") {
+            this.containsFilter(games, this.state.team2)
+        } else {
+            this.exactFilter(games, this.state.team2)
+        }
+    }
+
+    exactFilter(games, team) {
+        let names = team.split(', ')
+    }
+
+    containsFilter(games, team) {
+        let names = team.split(', ')
     }
 
     handleChangeTeam1 = (event) => {
@@ -171,34 +208,33 @@ export class PlayerComparison extends React.Component {
                             p: 2,
                             m: 5,
                             boxShadow: 10,
+                            display: "flex"
                         }}
                         row={true}
                     >
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
-                            <InputLabel id="team1-input-label">Team 1</InputLabel>
+                        <FormControl sx={{ m: 1, minWidth: 240 }}>
                             <Select
                                 multiple
-                                labelId="team1-input-label"
                                 id="team1-input"
                                 value={this.state.team1}
-                                label="Team 1"
                                 onChange={this.handleChangeTeam1}
                             >
                                     {
                                         this.state.players ? this.state.players.map((player) => (
+                                            !this.state.team2.includes(player.name) ?
                                             <MenuItem
                                                 key={player.name}
                                                 value={player.name}
                                                 style={this.getStyles(player.name, this.state.team1)}
                                             >
                                                 {player.name}
-                                            </MenuItem>
+                                            </MenuItem> : null
                                         )) : null
                                 }
                             </Select>
-                            <FormHelperText>With label + helper text</FormHelperText>
+                            <FormHelperText>Team 1</FormHelperText>
                         </FormControl>
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
+                        <FormControl sx={{ m: 1, minWidth: 140 }}>
                             <Select
                                 value={this.state.team1Relation}
                                 onChange={this.handleChangeTeam1Relations}
@@ -212,47 +248,35 @@ export class PlayerComparison extends React.Component {
                                     {"has exactly"}
                                 </MenuItem>
                             </Select>
-                            <FormHelperText>Without label</FormHelperText>
+                            <FormHelperText>Relation</FormHelperText>
                         </FormControl>
                         <Divider orientation="vertical" flexItem sx={{ paddingLeft: 3, paddingRight: 3 }}>
                             VS
                         </Divider>
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
-                            <InputLabel id="team2-input-label"/>
+                        <FormControl sx={{ m: 1, minWidth: 240 }}>
                             <Select
                                 multiple
                                 displayEmpty
-                                labelId="team2-input-label"
                                 id="team2-input"
                                 value={this.state.team2}
-                                label="Team 2"
                                 onChange={this.handleChangeTeam2}
-                                renderValue={(selected) => {
-                                    if (selected.length === 0) {
-                                        return <em>Any</em>;
-                                    }
-
-                                    return selected.join(', ');
-                                }}
                             >
-                                <MenuItem disabled value="">
-                                    <em>Any</em>
-                                </MenuItem>
                                 {
                                     this.state.players ? this.state.players.map((player) => (
+                                        !this.state.team1.includes(player.name) ?
                                         <MenuItem
                                             key={player.name}
                                             value={player.name}
                                             style={this.getStyles(player.name, this.state.team2)}
                                         >
                                             {player.name}
-                                        </MenuItem>
+                                        </MenuItem> : null
                                     )) : null
                                 }
                             </Select>
-                            <FormHelperText>With label + helper text</FormHelperText>
+                            <FormHelperText>Team 2</FormHelperText>
                         </FormControl>
-                        <FormControl sx={{ m: 1, minWidth: 120 }}>
+                        <FormControl sx={{ m: 1, minWidth: 140 }}>
                             <Select
                                 value={this.state.team2Relation}
                                 onChange={this.handleChangeTeam2Relations}
@@ -266,18 +290,24 @@ export class PlayerComparison extends React.Component {
                                     {"has exactly"}
                                 </MenuItem>
                             </Select>
-                            <FormHelperText>Without label</FormHelperText>
+                            <FormHelperText>Relation</FormHelperText>
                         </FormControl>
+
+                            <IconButton size="large" onClick={this.filterGames} sx={{
+                                marginLeft: 20
+                            }}>
+                                <PlayCircleIcon fontSize="large" />
+                            </IconButton>
                     </FormGroup>
                     </Box>
 
 
 
                 <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '7%', paddingBottom: '10%'}}>
-                    {   this.state.games ?
+                    {   this.state.filteredGames ?
                         <div style={{height: 630.5, width: '100%'}}>
                         <DataGrid
-                                rows={this.state.games}
+                                rows={this.state.filteredGames}
                                 columns={this.state.columns}
                                 pageSize={10}
                                 rowsPerPageOptions={[10]}
