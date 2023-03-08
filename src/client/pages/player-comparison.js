@@ -1,24 +1,9 @@
 import React from "react";
 import {Form} from "react-bootstrap";
 import {getGames, getPlayers} from "../services/api";
-import { DataGrid } from '@mui/x-data-grid';
-import { GridLoadingOverlay } from "@mui/x-data-grid";
-import {
-    Box,
-    Button, Divider,
-    FormControl,
-    FormGroup,
-    FormHelperText,
-    InputLabel,
-    MenuItem,
-    Select,
-    useTheme
-} from "@mui/material";
-import toastr from "toastr";
+import {DataGrid, GridLoadingOverlay} from '@mui/x-data-grid';
+import {Box, Divider, FormControl, FormGroup, FormHelperText, IconButton, MenuItem, Select} from "@mui/material";
 import $ from "jquery";
-import { withTheme } from '@material-ui/core/styles';
-import {blue100} from "mui/source/styles/colors";
-import {IconButton} from "@mui/material";
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 
 export class PlayerComparison extends React.Component {
@@ -105,6 +90,16 @@ export class PlayerComparison extends React.Component {
                 games.forEach((game) => {
                     game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
+                    game.red_team = game.red_team.map((player) => player =
+                        {
+                            id: player,
+                            name: this.state.players.filter(player1 => player1.id === player)[0].name
+                        })
+                    game.blue_team = game.blue_team.map((player) => player =
+                        {
+                            id: player,
+                            name: this.state.players.filter(player1 => player1.id === player)[0].name
+                        })
                 })
                 this.setState({ games: games, filteredGames: games });
             })
@@ -115,8 +110,8 @@ export class PlayerComparison extends React.Component {
 
     getTeamNames(members) {
         let names = ''
-        for (let i of members) {
-            names += this.state.players.filter(player => player.id === i)[0].name + ', '
+        for (let member of members) {
+            names += member.name + ', '
         }
         return names.slice(0, -2)
     }
@@ -138,32 +133,61 @@ export class PlayerComparison extends React.Component {
 
     filterGames() {
         let games = this.state.games
-        this.filterTeam1(games)
-        this.filterTeam2(games)
+        games = this.filterTeam1(games)
+        games = this.filterTeam2(games)
+        this.setState({filteredGames: games})
+        console.log(this.state.filteredGames.length)
     }
 
     filterTeam1(games) {
         if (this.state.team1Relation === "contains") {
-            this.containsFilter(games, this.state.team1)
+            return this.containsFilter(games, this.state.team1)
         } else {
-            this.exactFilter(games, this.state.team1)
+            return this.exactFilter(games, this.state.team1)
         }
     }
 
     filterTeam2(games) {
         if (this.state.team2Relation === "contains") {
-            this.containsFilter(games, this.state.team2)
+            return this.containsFilter(games, this.state.team2)
         } else {
-            this.exactFilter(games, this.state.team2)
+            return this.exactFilter(games, this.state.team2)
         }
     }
 
     exactFilter(games, team) {
-        let names = team.split(', ')
+        team.sort()
+        games = games.filter(game => {
+            let r = game.red_team.map(player => player = player.name).sort()
+            let b = game.blue_team.map(player => player = player.name).sort()
+            return JSON.stringify(team) === JSON.stringify(r) || JSON.stringify(team) === JSON.stringify(b)
+        })
+        return games
     }
 
     containsFilter(games, team) {
-        let names = team.split(', ')
+        games = games.filter(game => {
+            let rTruthy = true
+            let bTruthy = true
+            let r = game.red_team.map(player => player = player.name)
+            let b = game.blue_team.map(player => player = player.name)
+            for (let i = 0; i < team.length; i++) {
+                //check that every player in 'team' exists in either r or b
+                let player = team[i]
+                let otherTeam = team === this.state.team1 ? this.state.team2 : this.state.team1
+                    for (let j = 0; j < otherTeam.length; j++) {
+                        let otherPlayer = otherTeam[j]
+                        if (!r.includes(player) || (r.includes(otherPlayer) && r.includes(player))) {
+                            rTruthy = false
+                        }
+                        if (!b.includes(player) || (b.includes(otherPlayer) && b.includes(player))) {
+                            bTruthy = false
+                        }
+                    }
+                }
+            return rTruthy || bTruthy
+        })
+        return games
     }
 
     handleChangeTeam1 = (event) => {
