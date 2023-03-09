@@ -20,6 +20,7 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
+import {GridNoResultsOverlay} from "@mui/x-data-grid/components/GridNoResultsOverlay";
 
 
 export class PlayerComparison extends React.Component {
@@ -42,7 +43,7 @@ export class PlayerComparison extends React.Component {
         this.setStartDate = this.setStartDate.bind(this)
         this.setEndDate = this.setEndDate.bind(this)
         this.calculateStats = this.calculateStats.bind(this)
-        this.filterDupes = this.filterDupes.bind(this)
+        this.filterDupesAndDates = this.filterDupesAndDates.bind(this)
 
         this.state = {
             games: [],
@@ -52,10 +53,12 @@ export class PlayerComparison extends React.Component {
             team2: [],
             team1Relation: "has exactly",
             team2Relation: "contains",
-            startDate: "",
-            endDate: "",
+            startDate: null,
+            endDate: null,
             wlr: 0,
             totalGames: 0,
+            totalGoals: [0, 0],
+            totalGameTime: 0,
             columns: [
                 {
                     field: 'date',
@@ -113,6 +116,7 @@ export class PlayerComparison extends React.Component {
                 let games = res.data
                 games.forEach((game) => {
                     game.date = game.date.slice(0, 10)
+                    game.og_game_time = game.game_time
                     game.game_time = this.parseTime(game.game_time)
                     game.red_team_names = game.red_team.map((player) => player =
                        this.state.players.filter(player1 => player1.id === player)[0].name
@@ -152,16 +156,16 @@ export class PlayerComparison extends React.Component {
     }
 
     setStartDate(event) {
-        this.setState({startDate: event.target.value})
+        this.setState({startDate: event})
     }
 
     setEndDate(event) {
-        this.setState({endDate: event.target.value})
+        this.setState({endDate: event})
     }
 
     async filterGames() {
         let games = this.state.games
-        games = await this.filterDupes(games)
+        games = await this.filterDupesAndDates(games)
         if (this.state.team1.length !== 0) {
             games = this.filterTeam1(games)
         }
@@ -173,8 +177,15 @@ export class PlayerComparison extends React.Component {
         this.calculateStats()
     }
 
-    filterDupes(games) {
+    filterDupesAndDates(games) {
         games = games.filter(game => {
+            // Date filter
+            let startDate = this.state.startDate ? this.state.startDate.format('YYYY-MM-DD') : '0000-00-00'
+            let endDate = this.state.endDate ? this.state.endDate.format('YYYY-MM-DD') : '9999-99-99'
+            if (game.date < startDate || game.date > endDate) {
+                return false
+            }
+
             // If team1 contains members in both red and blue team then filter it out
             for (let player of this.state.team1) {
                 if (game.red_team_names.includes(player)) {
@@ -216,8 +227,23 @@ export class PlayerComparison extends React.Component {
     calculateStats() {
         let team1Wins = 0
         let team2Wins = 0
+        let team1Goals = 0
+        let team2Goals = 0
+        let totalGameTime = 0
         for (let game of this.state.filteredGames) {
+            // Calculate game time
+            totalGameTime += game.og_game_time
             for (let player of this.state.team1) {
+                // Calculate losses
+                if (game.red_team_names.includes(player)) {
+                    team1Goals += game.red_score
+                    team2Goals += game.blue_score
+                } else {
+                    team2Goals += game.red_score
+                    team1Goals += game.blue_score
+                }
+
+                // Calculate wins
                 let winningTeam = game.red_score > game.blue_score ?
                     game.red_team_names :
                     game.blue_team_names
@@ -239,7 +265,10 @@ export class PlayerComparison extends React.Component {
         } else {
             wlr = (100 * team1Wins / (team2Wins + team1Wins)).toFixed(1)
         }
-        this.setState({wlr: wlr, totalGames: team1Wins + team2Wins}, )
+        this.setState({
+            wlr: wlr, totalGames: team1Wins + team2Wins, totalGoals: [team1Goals, team2Goals],
+            totalGameTime: totalGameTime
+        })
     }
 
     filterTeam1(games) {
@@ -440,7 +469,6 @@ export class PlayerComparison extends React.Component {
 
                             <FormControl sx={{ m: 1, maxWidth: 100 }}>
                                 <DatePicker
-                                    disableFuture={true}
                                     label="To"
                                     value={this.state.endDate}
                                     onChange={(newValue) => this.setEndDate(newValue)}
@@ -519,12 +547,20 @@ export class PlayerComparison extends React.Component {
                                 >
                                     <CardContent>
                                         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                                            Others Stats
+                                            Average Goals
                                         </Typography>
                                         <Typography variant="body2">
                                         </Typography>
-                                        <Typography variant="h3" component="div">
-                                            for later
+                                        <Typography variant="h4" component="div">
+                                            {
+                                                this.state.totalGames !== 0 ?
+                                                `${(this.state.totalGoals[0] / this.state.totalGames).toFixed(1)} : 
+                                                ${(this.state.totalGoals[1] / this.state.totalGames).toFixed(1)}`
+                                                : `0 : 0`
+                                            }
+                                        </Typography>
+                                        <Typography sx={{ mb: -0.7, fontSize: 13 }} color="text.secondary">
+                                            Team 1   :   Team 2
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -537,12 +573,16 @@ export class PlayerComparison extends React.Component {
                                 >
                                     <CardContent>
                                         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                                            Other Stats
+                                            Average Game Time
                                         </Typography>
                                         <Typography variant="body2">
                                         </Typography>
                                         <Typography variant="h3" component="div">
-                                            for later
+                                            {
+                                                this.state.totalGames !== 0 ?
+                                                    this.parseTime(Math.round(this.state.totalGameTime / this.state.totalGames))
+                                                    : `0.00`
+                                            }
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -567,7 +607,7 @@ export class PlayerComparison extends React.Component {
                                     "& .MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                 }}
                                 components={{
-                                    NoRowsOverlay: GridLoadingOverlay
+                                    NoRowsOverlay: GridNoResultsOverlay
                                 }}
                                 initialState={{
                                     sorting: {
