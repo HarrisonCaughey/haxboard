@@ -187,6 +187,13 @@ export class PlayerComparison extends React.Component {
             }
 
             // If team1 contains members in both red and blue team then filter it out
+<<<<<<< Updated upstream
+=======
+            // Filter out any game where the red and blue teams don't contain all members from teams 1 and 2
+
+            // For each player in team1, if that player is in either side, then return false if any other members of that team are on the other side
+            // I also need to filter out games where any players from team2 are in team1
+>>>>>>> Stashed changes
             for (let player of this.state.team1) {
                 if (game.red_team_names.includes(player)) {
                     for (let player2 of this.state.team1) {
@@ -194,13 +201,30 @@ export class PlayerComparison extends React.Component {
                             return false
                         }
                     }
+<<<<<<< Updated upstream
                 }
                 if (game.blue_team_names.includes(player)) {
+=======
+                    for (let player3 of this.state.team2) {
+                        if (game.red_team_names.includes(player3)) {
+                            return false
+                        }
+                    }
+                } else if (game.blue_team_names.includes(player)) {
+>>>>>>> Stashed changes
                     for (let player2 of this.state.team1) {
                         if (game.red_team_names.includes(player2)) {
                             return false
                         }
                     }
+<<<<<<< Updated upstream
+=======
+                    for (let player3 of this.state.team2) {
+                        if (game.blue_team_names.includes(player3)) {
+                            return false
+                        }
+                    }
+>>>>>>> Stashed changes
                 }
             }
             for (let player of this.state.team2) {
@@ -210,6 +234,14 @@ export class PlayerComparison extends React.Component {
                             return false
                         }
                     }
+<<<<<<< Updated upstream
+=======
+                    for (let player3 of this.state.team1) {
+                        if (game.red_team_names.includes(player3)) {
+                            return false
+                        }
+                    }
+>>>>>>> Stashed changes
                 }
                 if (game.blue_team_names.includes(player)) {
                     for (let player2 of this.state.team2) {
@@ -217,6 +249,14 @@ export class PlayerComparison extends React.Component {
                             return false
                         }
                     }
+<<<<<<< Updated upstream
+=======
+                    for (let player3 of this.state.team1) {
+                        if (game.blue_team_names.includes(player3)) {
+                            return false
+                        }
+                    }
+>>>>>>> Stashed changes
                 }
             }
             return true
