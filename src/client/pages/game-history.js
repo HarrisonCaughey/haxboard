@@ -1,12 +1,11 @@
 import React from "react";
 import {Form} from "react-bootstrap";
-import {getGames, getPlayers, updatePlayer} from "../services/api";
+import {getGames, getPlayers} from "../services/api";
 import { DataGrid } from '@mui/x-data-grid';
 import { GridLoadingOverlay } from "@mui/x-data-grid";
 import {Button} from "@mui/material";
 import toastr from "toastr";
 import $ from "jquery";
-import clsx from "clsx";
 
 
 export class GameHistory extends React.Component {
