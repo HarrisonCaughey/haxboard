@@ -42,6 +42,7 @@ export class PlayerComparison extends React.Component {
         this.setStartDate = this.setStartDate.bind(this)
         this.setEndDate = this.setEndDate.bind(this)
         this.calculateStats = this.calculateStats.bind(this)
+        this.filterDupes = this.filterDupes.bind(this)
 
         this.state = {
             games: [],
@@ -54,6 +55,7 @@ export class PlayerComparison extends React.Component {
             startDate: "",
             endDate: "",
             wlr: 0,
+            totalGames: 0,
             columns: [
                 {
                     field: 'date',
@@ -78,7 +80,7 @@ export class PlayerComparison extends React.Component {
                     sortable: false,
                     sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
-                        `${this.getTeamNames(params.row.red_team)}`,
+                        `${this.getTeamNames(params.row.red_team_names)}`,
                     cellClassName: (params) => {
                         return params.row.red_score > params.row.blue_score ? "glowing-cell" : null
                     }
@@ -90,7 +92,7 @@ export class PlayerComparison extends React.Component {
                     sortable: false,
                      sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
-                        `${this.getTeamNames(params.row.blue_team)}`,
+                        `${this.getTeamNames(params.row.blue_team_names)}`,
                     cellClassName: (params) => {
                         return params.row.blue_score > params.row.red_score ? "glowing-cell" : null
                     }
@@ -112,16 +114,12 @@ export class PlayerComparison extends React.Component {
                 games.forEach((game) => {
                     game.date = game.date.slice(0, 10)
                     game.game_time = this.parseTime(game.game_time)
-                    game.red_team = game.red_team.map((player) => player =
-                        {
-                            id: player,
-                            name: this.state.players.filter(player1 => player1.id === player)[0].name
-                        })
-                    game.blue_team = game.blue_team.map((player) => player =
-                        {
-                            id: player,
-                            name: this.state.players.filter(player1 => player1.id === player)[0].name
-                        })
+                    game.red_team_names = game.red_team.map((player) => player =
+                       this.state.players.filter(player1 => player1.id === player)[0].name
+                        )
+                    game.blue_team_names = game.blue_team.map((player) => player =
+                        this.state.players.filter(player1 => player1.id === player)[0].name
+                        )
                 })
                 this.setState({ games: games, filteredGames: games });
             })
@@ -133,7 +131,7 @@ export class PlayerComparison extends React.Component {
     getTeamNames(members) {
         let names = ''
         for (let member of members) {
-            names += member.name + ', '
+            names += member + ', '
         }
         return names.slice(0, -2)
     }
@@ -163,25 +161,66 @@ export class PlayerComparison extends React.Component {
 
     async filterGames() {
         let games = this.state.games
-        games = this.filterTeam1(games)
-        games = this.filterTeam2(games)
+        games = await this.filterDupes(games)
+        if (this.state.team1.length !== 0) {
+            games = this.filterTeam1(games)
+        }
+        if (this.state.team2.length !== 0) {
+            games = this.filterTeam2(games)
+        }
         await this.setState({filteredGames: games})
 
         this.calculateStats()
-        console.log(this.state.filteredGames.length)
+    }
+
+    filterDupes(games) {
+        games = games.filter(game => {
+            // If team1 contains members in both red and blue team then filter it out
+            for (let player of this.state.team1) {
+                if (game.red_team_names.includes(player)) {
+                    for (let player2 of this.state.team1) {
+                        if (game.blue_team_names.includes(player2)) {
+                            return false
+                        }
+                    }
+                }
+                if (game.blue_team_names.includes(player)) {
+                    for (let player2 of this.state.team1) {
+                        if (game.red_team_names.includes(player2)) {
+                            return false
+                        }
+                    }
+                }
+            }
+            for (let player of this.state.team2) {
+                if (game.red_team_names.includes(player)) {
+                    for (let player2 of this.state.team2) {
+                        if (game.blue_team_names.includes(player2)) {
+                            return false
+                        }
+                    }
+                }
+                if (game.blue_team_names.includes(player)) {
+                    for (let player2 of this.state.team2) {
+                        if (game.red_team_names.includes(player2)) {
+                            return false
+                        }
+                    }
+                }
+            }
+            return true
+        })
+        return games
     }
 
     calculateStats() {
-        // For each game calculate how many games team 1 wins and how many games team 2 wins.
         let team1Wins = 0
         let team2Wins = 0
         for (let game of this.state.filteredGames) {
-            let r = game.red_team.map(player => player = player.name).sort()
-            let b = game.blue_team.map(player => player = player.name).sort()
             for (let player of this.state.team1) {
                 let winningTeam = game.red_score > game.blue_score ?
-                    game.red_team.map(player => player = player.name) :
-                    game.blue_team.map(player => player = player.name)
+                    game.red_team_names :
+                    game.blue_team_names
                 if (winningTeam.includes(player)) {
                     team1Wins++
                     break
@@ -191,8 +230,16 @@ export class PlayerComparison extends React.Component {
                 }
             }
         }
-        console.log(team1Wins, team2Wins)
-        this.setState({wlr: (100 * team1Wins / (team2Wins + team1Wins)).toFixed(1)})
+        let wlr
+        if (team1Wins === 0) {
+            wlr = 0
+        }
+        else if (team2Wins === 0) {
+            wlr = 100
+        } else {
+            wlr = (100 * team1Wins / (team2Wins + team1Wins)).toFixed(1)
+        }
+        this.setState({wlr: wlr, totalGames: team1Wins + team2Wins}, )
     }
 
     filterTeam1(games) {
@@ -214,34 +261,39 @@ export class PlayerComparison extends React.Component {
     exactFilter(games, team) {
         team.sort()
         games = games.filter(game => {
-            let r = game.red_team.map(player => player = player.name).sort()
-            let b = game.blue_team.map(player => player = player.name).sort()
+            let r = game.red_team_names.sort()
+            let b = game.blue_team_names.sort()
             return JSON.stringify(team) === JSON.stringify(r) || JSON.stringify(team) === JSON.stringify(b)
         })
         return games
     }
 
     containsFilter(games, team) {
+        // check that every player in 'team' exists in either r or b
         games = games.filter(game => {
-            let rTruthy = true
-            let bTruthy = true
-            let r = game.red_team.map(player => player = player.name)
-            let b = game.blue_team.map(player => player = player.name)
-            for (let i = 0; i < team.length; i++) {
-                //check that every player in 'team' exists in either r or b
-                let player = team[i]
-                let otherTeam = team === this.state.team1 ? this.state.team2 : this.state.team1
-                    for (let j = 0; j < otherTeam.length; j++) {
-                        let otherPlayer = otherTeam[j]
-                        if (!r.includes(player) || (r.includes(otherPlayer) && r.includes(player))) {
-                            rTruthy = false
-                        }
-                        if (!b.includes(player) || (b.includes(otherPlayer) && b.includes(player))) {
-                            bTruthy = false
+            for (let player of team) {
+                // team = ["Harrison", "Martin"]
+                // red_team = ["Martin", "Sam"]
+                if (game.red_team_names.includes(player)) {
+                    let truthy = true
+                    for (let player2 of team) {
+                        if (!game.red_team_names.includes(player2)) {
+                            truthy = false
                         }
                     }
+                    return truthy
                 }
-            return rTruthy || bTruthy
+                if (game.blue_team_names.includes(player)) {
+                    let truthy = true
+                    for (let player2 of team) {
+                        if (!game.blue_team_names.includes(player2)) {
+                            truthy = false
+                        }
+                    }
+                    return truthy
+                }
+            }
+            return false
         })
         return games
     }
@@ -423,7 +475,7 @@ export class PlayerComparison extends React.Component {
                         row={true}
                     >
                         <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3}>
                                 <Card sx={{
                                     backgroundColor: "rgba(250, 250, 250, .3)",
                                     padding: 2,
@@ -441,7 +493,7 @@ export class PlayerComparison extends React.Component {
                                     </CardContent>
                                 </Card>
                             </Grid>
-                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3}>
                                 <Card sx={{
                                     backgroundColor: "rgba(250, 250, 250, .3)",
                                     padding: 2,
@@ -449,15 +501,17 @@ export class PlayerComparison extends React.Component {
                                 >
                                     <CardContent>
                                         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                                            Total Games Played
+                                            Games Played
                                         </Typography>
-                                        <Typography variant="h5" component="div">
-                                            naw
+                                        <Typography variant="body2">
+                                        </Typography>
+                                        <Typography variant="h3" component="div">
+                                            {this.state.totalGames}
                                         </Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
-                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3}>
                                 <Card sx={{
                                     backgroundColor: "rgba(250, 250, 250, .3)",
                                     padding: 2,
@@ -465,15 +519,17 @@ export class PlayerComparison extends React.Component {
                                 >
                                     <CardContent>
                                         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                                            Kicks
+                                            Others Stats
                                         </Typography>
-                                        <Typography variant="h5" component="div">
-                                            naw
+                                        <Typography variant="body2">
+                                        </Typography>
+                                        <Typography variant="h3" component="div">
+                                            for later
                                         </Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
-                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3}>
                                 <Card sx={{
                                     backgroundColor: "rgba(250, 250, 250, .3)",
                                     padding: 2,
@@ -481,10 +537,12 @@ export class PlayerComparison extends React.Component {
                                 >
                                     <CardContent>
                                         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-                                            Goals
+                                            Other Stats
                                         </Typography>
-                                        <Typography variant="h5" component="div">
-                                            naw
+                                        <Typography variant="body2">
+                                        </Typography>
+                                        <Typography variant="h3" component="div">
+                                            for later
                                         </Typography>
                                     </CardContent>
                                 </Card>
