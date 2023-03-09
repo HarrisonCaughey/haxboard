@@ -2,9 +2,25 @@ import React from "react";
 import {Form} from "react-bootstrap";
 import {getGames, getPlayers} from "../services/api";
 import {DataGrid, GridLoadingOverlay} from '@mui/x-data-grid';
-import {Box, Divider, FormControl, FormGroup, FormHelperText, IconButton, MenuItem, Select} from "@mui/material";
+import {
+    Box,
+    Card, CardContent,
+    Divider,
+    FormControl,
+    FormGroup,
+    FormHelperText,
+    Grid,
+    IconButton,
+    MenuItem,
+    Select, Typography
+} from "@mui/material";
 import $ from "jquery";
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+
 
 export class PlayerComparison extends React.Component {
 
@@ -23,6 +39,9 @@ export class PlayerComparison extends React.Component {
         this.filterTeam2 = this.filterTeam2.bind(this)
         this.exactFilter = this.exactFilter.bind(this)
         this.containsFilter = this.containsFilter.bind(this)
+        this.setStartDate = this.setStartDate.bind(this)
+        this.setEndDate = this.setEndDate.bind(this)
+        this.calculateStats = this.calculateStats.bind(this)
 
         this.state = {
             games: [],
@@ -30,8 +49,11 @@ export class PlayerComparison extends React.Component {
             players: null,
             team1: [],
             team2: [],
-            team1Relation: "contains",
+            team1Relation: "has exactly",
             team2Relation: "contains",
+            startDate: "",
+            endDate: "",
+            wlr: 0,
             columns: [
                 {
                     field: 'date',
@@ -131,12 +153,46 @@ export class PlayerComparison extends React.Component {
         return null
     }
 
-    filterGames() {
+    setStartDate(event) {
+        this.setState({startDate: event.target.value})
+    }
+
+    setEndDate(event) {
+        this.setState({endDate: event.target.value})
+    }
+
+    async filterGames() {
         let games = this.state.games
         games = this.filterTeam1(games)
         games = this.filterTeam2(games)
-        this.setState({filteredGames: games})
+        await this.setState({filteredGames: games})
+
+        this.calculateStats()
         console.log(this.state.filteredGames.length)
+    }
+
+    calculateStats() {
+        // For each game calculate how many games team 1 wins and how many games team 2 wins.
+        let team1Wins = 0
+        let team2Wins = 0
+        for (let game of this.state.filteredGames) {
+            let r = game.red_team.map(player => player = player.name).sort()
+            let b = game.blue_team.map(player => player = player.name).sort()
+            for (let player of this.state.team1) {
+                let winningTeam = game.red_score > game.blue_score ?
+                    game.red_team.map(player => player = player.name) :
+                    game.blue_team.map(player => player = player.name)
+                if (winningTeam.includes(player)) {
+                    team1Wins++
+                    break
+                } else {
+                    team2Wins++
+                    break
+                }
+            }
+        }
+        console.log(team1Wins, team2Wins)
+        this.setState({wlr: (100 * team1Wins / (team2Wins + team1Wins)).toFixed(1)})
     }
 
     filterTeam1(games) {
@@ -317,17 +373,128 @@ export class PlayerComparison extends React.Component {
                             <FormHelperText>Relation</FormHelperText>
                         </FormControl>
 
-                            <IconButton size="large" onClick={this.filterGames} sx={{
-                                marginLeft: 20
-                            }}>
+                        <Divider orientation="vertical" flexItem sx={{ paddingLeft: 3, paddingRight: 3 }}>
+                            Date
+                        </Divider>
+
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                            <FormControl sx={{ m: 1, maxWidth: 100 }}>
+                                <DatePicker
+                                    label="From"
+                                    value={this.state.startDate}
+                                    onChange={(newValue) => this.setStartDate(newValue)}
+                                />
+                            </FormControl>
+
+                            <FormControl sx={{ m: 1, maxWidth: 100 }}>
+                                <DatePicker
+                                    disableFuture={true}
+                                    label="To"
+                                    value={this.state.endDate}
+                                    onChange={(newValue) => this.setEndDate(newValue)}
+                                />
+                            </FormControl>
+                        </LocalizationProvider>
+
+                        <FormControl sx={{ m: 1, maxWidth: 100, marginLeft: 5 }}>
+                            <IconButton size="large" onClick={this.filterGames}>
                                 <PlayCircleIcon fontSize="large" />
                             </IconButton>
+                        </FormControl>
+
+
                     </FormGroup>
-                    </Box>
+                </Box>
 
 
+                <Box sx={{
+                    "& .MuiFormGroup-root":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                }}>
+                    <FormGroup
+                        sx={{
+                            p: 2,
+                            m: 10,
+                            marginLeft: 25,
+                            marginRight: 25,
+                            boxShadow: 10,
+                            display: "flex",
+                            paddingLeft: '5%', paddingRight: '5%', paddingTop: '3%', paddingBottom: '3%'
+                        }}
+                        row={true}
+                    >
+                        <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                                <Card sx={{
+                                    backgroundColor: "rgba(250, 250, 250, .3)",
+                                    padding: 2,
+                                    textAlign: 'center',}}
+                                >
+                                    <CardContent>
+                                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                                            Team 1 Win/Loss Ratio
+                                        </Typography>
+                                        <Typography variant="body2">
+                                        </Typography>
+                                        <Typography variant="h3" component="div">
+                                            {`${this.state.wlr}%`}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                                <Card sx={{
+                                    backgroundColor: "rgba(250, 250, 250, .3)",
+                                    padding: 2,
+                                    textAlign: 'center',}}
+                                >
+                                    <CardContent>
+                                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                                            Total Games Played
+                                        </Typography>
+                                        <Typography variant="h5" component="div">
+                                            naw
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                                <Card sx={{
+                                    backgroundColor: "rgba(250, 250, 250, .3)",
+                                    padding: 2,
+                                    textAlign: 'center',}}
+                                >
+                                    <CardContent>
+                                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                                            Kicks
+                                        </Typography>
+                                        <Typography variant="h5" component="div">
+                                            naw
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid paddingRight={5} paddingLeft={5} xs={3}>
+                                <Card sx={{
+                                    backgroundColor: "rgba(250, 250, 250, .3)",
+                                    padding: 2,
+                                    textAlign: 'center',}}
+                                >
+                                    <CardContent>
+                                        <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                                            Goals
+                                        </Typography>
+                                        <Typography variant="h5" component="div">
+                                            naw
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
+                    </FormGroup>
+                </Box>
 
-                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingTop: '7%', paddingBottom: '10%'}}>
+
+                <Form style={{paddingLeft: '15%', paddingRight: '15%', paddingBottom: '10%'}}>
                     {   this.state.filteredGames ?
                         <div style={{height: 630.5, width: '100%'}}>
                         <DataGrid
