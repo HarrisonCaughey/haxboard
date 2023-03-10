@@ -14,7 +14,7 @@ export class PlayerStats extends React.Component {
             players: [],
             columns: [
                 { field: 'name', headerName: 'Name', width: 150, sortingOrder: ['desc', 'asc'] },
-                { field: 'elo', headerName: 'ELO', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'elo', headerName: 'Elo', width: 100, sortingOrder: ['desc', 'asc'] },
                 {
                     field: 'wlr',
                     headerName: 'Win/Loss Ratio',
@@ -24,8 +24,8 @@ export class PlayerStats extends React.Component {
                     sortComparator: this.percentageComparator,
                     sortingOrder: ['desc', 'asc']
                 },
-                { field: 'games_played', headerName: 'P', width: 100, sortingOrder: ['desc', 'asc'] },
-                { field: 'games_won', headerName: 'W', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'games_played', headerName: 'Played', width: 100, sortingOrder: ['desc', 'asc'] },
+                { field: 'games_won', headerName: 'Won', width: 100, sortingOrder: ['desc', 'asc'] },
                 { field: 'goals', headerName: 'Goals', width: 100, sortingOrder: ['desc', 'asc'] },
                 { field: 'assists', headerName: 'Assists', width: 100, sortingOrder: ['desc', 'asc'] },
                 { field: 'kicks', headerName: 'Kicks', width: 100, sortingOrder: ['desc', 'asc'] },

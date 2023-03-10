@@ -632,6 +632,13 @@ export class PlayerComparison extends React.Component {
                                     "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                     "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                     "& .MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                    "& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell:focus": {
+                                        outline: "none !important",
+                                    },
+                                    "& .MuiDataGrid-columnHeader:focus-within, & .MuiDataGrid-columnHeader:focus":
+                                        {
+                                            outline: "none !important",
+                                        },
                                 }}
                                 components={{
                                     NoRowsOverlay: GridNoResultsOverlay

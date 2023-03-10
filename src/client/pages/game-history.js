@@ -15,6 +15,7 @@ export class GameHistory extends React.Component {
         this.openConfirmModal = this.openConfirmModal.bind(this)
         this.getTeamNames = this.getTeamNames.bind(this)
         this.handleClick = this.handleClick.bind(this)
+        this.getTreeDataPath = this.getTreeDataPath.bind(this)
 
         this.state = {
             games: [],
@@ -108,6 +109,10 @@ export class GameHistory extends React.Component {
         return null
     }
 
+    getTreeDataPath(param) {
+        console.log(param)
+    }
+
     render() {
         return (
             <div>
@@ -118,12 +123,21 @@ export class GameHistory extends React.Component {
                                 rows={this.state.games}
                                 columns={this.state.columns}
                                 pageSize={10}
+                                treeData
+                                getTreeDataPath={this.getTreeDataPath}
                                 rowsPerPageOptions={[10]}
                                 sx={{
                                     boxShadow: 10,
                                     "& .MuiDataGrid-main":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                     "& .MuiDataGrid-footerComponent":  { backgroundColor: "rgba(250, 250, 250, .3)" },
                                     "& .MuiDataGrid-footerContainer":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                                    "& .MuiDataGrid-cell:focus-within, & .MuiDataGrid-cell:focus": {
+                                        outline: "none !important",
+                                    },
+                                    "& .MuiDataGrid-columnHeader:focus-within, & .MuiDataGrid-columnHeader:focus":
+                                        {
+                                            outline: "none !important",
+                                        },
                                 }}
                                 components={{
                                     NoRowsOverlay: GridLoadingOverlay
