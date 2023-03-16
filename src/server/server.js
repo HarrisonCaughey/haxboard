@@ -124,14 +124,10 @@ app.post('/api/players', (req, res) => {
 })
 
 app.get('/api/playerGameStats', (req, res) => {
-    let playerId = req.query.player_id;
-    let gameId = req.query.game_id
+    // let playerId = req.query.player_id;
+    // let gameId = req.query.game_id
     db.select('*')
         .from('PlayerGameStats')
-        .where({
-            game_id: gameId,
-            player_id: playerId
-        })
         .then((data) => {
             res.json(data);
         })

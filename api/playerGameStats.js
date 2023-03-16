@@ -14,14 +14,11 @@ const db = knex({
 async function playerGameStats(req, res) {
     console.log("api/playerGameStats endpoint hit in serverless function")
     if (req.method === 'GET') {
-        let playerId = req.query.player_id;
-        let gameId = req.query.game_id
+        // Potentially add where g id and p id = blah
+        // let playerId = req.query.player_id;
+        // let gameId = req.query.game_id
         db.select('*')
             .from('PlayerGameStats')
-            .where({
-                game_id: gameId,
-                player_id: playerId
-            })
             .then((data) => {
                 res.json(data);
             })
