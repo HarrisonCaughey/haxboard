@@ -3,7 +3,7 @@ import {Form} from "react-bootstrap";
 import {getGames, getPlayers} from "../services/api";
 import {DataGrid} from '@mui/x-data-grid';
 import {
-    Box,
+    Box, Button,
     Card, CardContent,
     Divider,
     FormControl,
@@ -198,14 +198,13 @@ export class PlayerComparison extends React.Component {
                             return false
                         }
                     }
-                }
-                if (game.blue_team_names.includes(player)) {
                     for (let player3 of this.state.team2) {
                         if (game.red_team_names.includes(player3)) {
                             return false
                         }
                     }
-                } else if (game.blue_team_names.includes(player)) {
+                }
+                if (game.blue_team_names.includes(player)) {
                     for (let player2 of this.state.team1) {
                         if (game.red_team_names.includes(player2)) {
                             return false
@@ -221,11 +220,13 @@ export class PlayerComparison extends React.Component {
             }
             for (let player of this.state.team2) {
                 if (game.red_team_names.includes(player)) {
+                    // If they're in red team then return false if any other player in their team is on the blue team
                     for (let player2 of this.state.team2) {
                         if (game.blue_team_names.includes(player2)) {
                             return false
                         }
                     }
+                    // If they're in red team then return false if anyone in team1 is also in their team
                     for (let player3 of this.state.team1) {
                         if (game.red_team_names.includes(player3)) {
                             return false
@@ -258,10 +259,12 @@ export class PlayerComparison extends React.Component {
         let team2Goals = 0
         let totalGameTime = 0
         for (let game of this.state.filteredGames) {
+            let winRecorded = false
+
             // Calculate game time
             totalGameTime += game.og_game_time
             for (let player of this.state.team1) {
-                // Calculate losses
+                // Calculate goals
                 if (game.red_team_names.includes(player)) {
                     team1Goals += game.red_score
                     team2Goals += game.blue_score
@@ -270,16 +273,17 @@ export class PlayerComparison extends React.Component {
                     team1Goals += game.blue_score
                 }
 
-                // Calculate wins
-                let winningTeam = game.red_score > game.blue_score ?
-                    game.red_team_names :
-                    game.blue_team_names
-                if (winningTeam.includes(player)) {
-                    team1Wins++
-                    break
-                } else {
-                    team2Wins++
-                    break
+                // Calculate wins if we haven't yet
+                if (!winRecorded) {
+                    winRecorded = true
+                    let winningTeam = game.red_score > game.blue_score ?
+                        game.red_team_names :
+                        game.blue_team_names
+                    if (winningTeam.includes(player)) {
+                        team1Wins++
+                    } else {
+                        team2Wins++
+                    }
                 }
             }
         }
@@ -327,29 +331,28 @@ export class PlayerComparison extends React.Component {
     containsFilter(games, team) {
         // check that every player in 'team' exists in either r or b
         games = games.filter(game => {
-            for (let player of team) {
-                // team = ["Harrison", "Martin"]
-                // red_team = ["Martin", "Sam"]
-                if (game.red_team_names.includes(player)) {
-                    let truthy = true
-                    for (let player2 of team) {
-                        if (!game.red_team_names.includes(player2)) {
-                            truthy = false
-                        }
+            let player = team[0]
+            if (game.red_team_names.includes(player)) {
+                // Then all player in that team should be in red team
+                let truthy = true
+                for (let player2 of team) {
+                    if (!game.red_team_names.includes(player2)) {
+                        truthy = false
                     }
-                    return truthy
                 }
-                if (game.blue_team_names.includes(player)) {
-                    let truthy = true
-                    for (let player2 of team) {
-                        if (!game.blue_team_names.includes(player2)) {
-                            truthy = false
-                        }
+                return truthy
+            } else if (game.blue_team_names.includes(player)) {
+                // Then all player in that team should be in blue team
+                let truthy = true
+                for (let player2 of team) {
+                    if (!game.blue_team_names.includes(player2)) {
+                        truthy = false
                     }
-                    return truthy
                 }
+                return truthy
+            } else {
+                return false
             }
-            return false
         })
         return games
     }
@@ -436,7 +439,6 @@ export class PlayerComparison extends React.Component {
                                     {"has exactly"}
                                 </MenuItem>
                             </Select>
-                            <FormHelperText>Relation</FormHelperText>
                         </FormControl>
                         <Divider orientation="vertical" flexItem sx={{ paddingLeft: 3, paddingRight: 3 }}>
                             VS
@@ -478,7 +480,6 @@ export class PlayerComparison extends React.Component {
                                     {"has exactly"}
                                 </MenuItem>
                             </Select>
-                            <FormHelperText>Relation</FormHelperText>
                         </FormControl>
 
                         <Divider orientation="vertical" flexItem sx={{ paddingLeft: 3, paddingRight: 3 }}>
