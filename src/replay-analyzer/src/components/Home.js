@@ -536,9 +536,11 @@ function eloAlgorithm3(game, weights) {
     let e1 = r1 / (r1 + r2)
 
     let eloGain = ELO_VOLATILITY * (1 - e1)
-    eloGain += predictionValue * 10
-    // Adjust individual elo gain based on weights
-    // eloGain = applyWeights(eloGain, weights, game.winnerStats)
+
+    // Adjust individual elo gain based on predicted result
+    eloGain += predictionValue * 5
+    // Adjust individual elo gain based on score
+    eloGain = adjustEloBasedOnScore(eloGain, Math.min(game.red_score, game.blue_score))
 
     individualElo = Math.round(individualElo + eloGain)
 
@@ -553,20 +555,37 @@ function eloAlgorithm3(game, weights) {
     let e2 = r2 / (r1 + r2)
 
     let eloLoss = (ELO_VOLATILITY * (1 - e2))
-    eloLoss += predictionValue * 10
-    // Adjust individual elo gain based on weights
-    // eloLoss = applyWeights(eloLoss, weights, game.winnerStats)
+
+    // Adjust individual elo gain based on predicted result
+    eloLoss += predictionValue * 5
+    // Adjust individual elo loss based on score
+    eloLoss = adjustEloBasedOnScore(eloLoss, Math.min(game.red_score, game.blue_score))
 
     individualElo = Math.round(individualElo - eloLoss)
 
     dbPlayers[loser].elo = individualElo
   }
-  console.log(predictionValue)
   return predictionValue > 0
-  // return winnerStr === "red" ? redTeamAverage > blueTeamAverage : blueTeamAverage > redTeamAverage
+}
+
+function adjustEloBasedOnScore(elo, loserScore) {
+  if (loserScore === 0) {
+    return elo * 1.2
+  } else if (loserScore === 1) {
+    return elo
+  } else {
+    return elo * 0.8
+  }
 }
 
 async function recalculateElo() {
+  let weights = {
+    kicks: -2.5,
+    possession: 4.7,
+    passes: -1.27,
+    shots_on_goal: 3,
+    own_goals: -0.69
+  }
   getPlayers().then(res => {
     dbPlayers = createPlayersMap(res.data)
     for (let i = 1; i <= _.size(dbPlayers); i++) {
@@ -574,9 +593,13 @@ async function recalculateElo() {
       player.elo = 1000
     }
     getGames().then(async res => {
+      let games = res.data
+      await getPlayerGameStats().then(res => {
+        augmentGames(res.data, games);
+      })
       let correctPredictions = 0
-      for (const game of res.data) {
-        let predictionResult = eloAlgorithm3(game)
+      for (const game of games) {
+        let predictionResult = eloAlgorithm3(game, weights)
         if (predictionResult) {
           correctPredictions += 1
         }
@@ -595,34 +618,68 @@ async function pushEloToDatabase() {
   }
 }
 
-function applyWeights(eloChange, weights, stats) {
-  if (stats.kicks !== 0 && weights.kicks !== 0) {
-    eloChange = eloChange * ((1 + stats.kicks) * weights.kicks)
-  }
-  if (stats.passes !== 0 && weights.passes !== 0) {
-    eloChange = eloChange * ((1 + stats.passes) * weights.passes)
-  }
-  if (stats.shots_on_goal !== 0 && weights.shots_on_goal !== 0) {
-    eloChange = eloChange * ((1 + stats.shots_on_goal) * weights.shots_on_goal)
-  }
-  if (stats.possession !== 0 && weights.possession !== 0) {
-    eloChange = eloChange * ((1 + stats.possession) * weights.possession)
-  }
-  return eloChange
-}
-
 function getPredictedWinner(weights, stats) {
   let prediction = 0
   prediction += (stats.kicks * weights.kicks)
   prediction += (stats.passes * weights.passes)
   prediction += (stats.shots_on_goal * weights.shots_on_goal)
   prediction += (stats.possession * weights.possession)
+  prediction += (stats.own_goals * weights.own_goals)
   return prediction
+}
+
+function augmentGames(gameStats, games) {
+  // for each game, compile the associated player-game rows into relevant data
+  // e.g difference in kicks, difference in possession, etc
+  for (const game of games) {
+    // statsObject represents the fraction of parameters the winning team has vs the losing team
+    let winnerStatsObject = {
+      kicks: 0,
+      possession: 0,
+      passes: 0,
+      shots_on_goal: 0,
+      own_goals: 0
+    }
+    let totalStatsObject = {
+      kicks: 0,
+      possession: 0,
+      passes: 0,
+      shots_on_goal: 0,
+      own_goals: 0
+    }
+    let players = game.red_team.concat(game.blue_team)
+    for (const player of players) {
+      let stats = gameStats.filter(stat => stat.player_id === player && stat.game_id === game.id)[0]
+      if (stats.won) {
+        winnerStatsObject.kicks += stats.kicks
+        winnerStatsObject.possession += stats.possession
+        winnerStatsObject.passes += stats.passes
+        winnerStatsObject.shots_on_goal += stats.shots_on_goal
+        winnerStatsObject.own_goals += stats.own_goals
+      }
+      totalStatsObject.kicks += stats.kicks
+      totalStatsObject.possession += stats.possession
+      totalStatsObject.passes += stats.passes
+      totalStatsObject.shots_on_goal += stats.shots_on_goal
+      totalStatsObject.own_goals += stats.own_goals
+    }
+    game.winnerStats = {
+      kicks: totalStatsObject.kicks === 0 ? 0 :
+          (winnerStatsObject.kicks / totalStatsObject.kicks) - (1 - (winnerStatsObject.kicks / totalStatsObject.kicks)),
+      possession: game.red_score > game.blue_score ? (game.red_possession - game.blue_possession) / 100 : (game.blue_possession - game.red_possession) / 100,
+      passes: totalStatsObject.passes === 0 ? 0 :
+          (winnerStatsObject.passes / totalStatsObject.passes) - (1 - (winnerStatsObject.passes / totalStatsObject.passes)),
+      shots_on_goal: totalStatsObject.shots_on_goal === 0 ? 0 :
+          (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal) - (1 - (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal)),
+      own_goals: totalStatsObject.own_goals === 0 ? 0 :
+          (winnerStatsObject.own_goals / totalStatsObject.own_goals) - (1 - (winnerStatsObject.own_goals / totalStatsObject.own_goals))
+    }
+  }
 }
 
 async function calculateWeights() {
 
-  let possibleWeights = [-2.5, -1.27, 4.7, 3, 2.9, 3.1, -2.2, -2.3, -2.4, -2.6, -2.7, 2.95, 3.05]
+  let possibleWeights = [-2.5, -1.27, 4.7, 3, -0.69]
 
   // get games and player-game-stats for each of those games
   console.log("Calculate weights")
@@ -637,87 +694,49 @@ async function calculateWeights() {
       console.log("Got games")
       let games = res.data
       await getPlayerGameStats().then(res => {
-        console.log("Got player stats")
-        let gameStats = res.data
-        // for each game, compile the associated player-game rows into relevant data
-        // e.g difference in kicks, difference in possession, etc
-        for (const game of games) {
-          // statsObject represents the fraction of parameters the winning team has vs the losing team
-          let winnerStatsObject = {
-            kicks: 0,
-            possession: 0,
-            passes: 0,
-            shots_on_goal: 0
-          }
-          let totalStatsObject = {
-            kicks: 0,
-            possession: 0,
-            passes: 0,
-            shots_on_goal: 0
-          }
-          let players = game.red_team.concat(game.blue_team)
-          for (const player of players) {
-            let stats = gameStats.filter(stat => stat.player_id === player && stat.game_id === game.id)[0]
-            if (stats.won) {
-              winnerStatsObject.kicks += stats.kicks
-              winnerStatsObject.possession += stats.possession
-              winnerStatsObject.passes += stats.passes
-              winnerStatsObject.shots_on_goal += stats.shots_on_goal
-            }
-            totalStatsObject.kicks += stats.kicks
-            totalStatsObject.possession += stats.possession
-            totalStatsObject.passes += stats.passes
-            totalStatsObject.shots_on_goal += stats.shots_on_goal
-          }
-          game.winnerStats = {
-            kicks: totalStatsObject.kicks === 0 ? 0 :
-                (winnerStatsObject.kicks / totalStatsObject.kicks) - (1 - (winnerStatsObject.kicks / totalStatsObject.kicks)),
-            possession: game.red_score > game.blue_score ? (game.red_possession - game.blue_possession) / 100 : (game.blue_possession - game.red_possession) / 100,
-            passes: totalStatsObject.passes === 0 ? 0 :
-                (winnerStatsObject.passes / totalStatsObject.passes) - (1 - (winnerStatsObject.passes / totalStatsObject.passes)),
-            shots_on_goal: totalStatsObject.shots_on_goal === 0 ? 0 :
-                (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal) - (1 - (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal)),
-          }
-        }
+        augmentGames(res.data, games);
       })
       let mostPredicted = 0
       let bestWeights = null
       console.log(possibleWeights)
       console.log(games)
-      // for (let i = 0; i < possibleWeights.length; i++) {
-      //   for (let j = 0; j < possibleWeights.length; j++) {
-      //     for (let k = 0; k < possibleWeights.length; k++) {
-      //       for (let l = 0; l < possibleWeights.length; l++) {
-      //         dbPlayers = JSON.parse(JSON.stringify(ogPlayers))
-      //         let weights = {
-      //           kicks: possibleWeights[i],
-      //           possession: possibleWeights[j],
-      //           passes: possibleWeights[k],
-      //           shots_on_goal: possibleWeights[l]
-      //         }
-      //         let numberPredicted = 0
-      //         for (const game of res.data) {
-      //           let correctPrediction = eloAlgorithm3(game, weights)
-      //           if (correctPrediction) {
-      //             numberPredicted++
-      //           }
-      //         }
-      //         if (numberPredicted > mostPredicted) {
-      //           mostPredicted = numberPredicted
-      //           bestWeights = weights
-      //         }
-      //
-      //       }
-      //     }
-      //   }
-      // }
+      for (let i = 0; i < possibleWeights.length; i++) {
+        for (let j = 0; j < possibleWeights.length; j++) {
+          for (let k = 0; k < possibleWeights.length; k++) {
+            for (let l = 0; l < possibleWeights.length; l++) {
+              for (let m = 0; m < possibleWeights.length; m++) {
+                dbPlayers = JSON.parse(JSON.stringify(ogPlayers))
+                let weights = {
+                  kicks: possibleWeights[i],
+                  possession: possibleWeights[j],
+                  passes: possibleWeights[k],
+                  shots_on_goal: possibleWeights[l],
+                  own_goals: possibleWeights[m]
+                }
+                let numberPredicted = 0
+                for (const game of res.data) {
+                  let correctPrediction = eloAlgorithm3(game, weights)
+                  if (correctPrediction) {
+                    numberPredicted++
+                  }
+                }
+                if (numberPredicted > mostPredicted) {
+                  mostPredicted = numberPredicted
+                  bestWeights = weights
+                }
+              }
+            }
+          }
+        }
+      }
 
-
+      // TODO - use this at line 293 when model is finalized
       let weights = {
                   kicks: -2.5,
                   possession: 4.7,
                   passes: -1.27,
-                  shots_on_goal: 3
+                  shots_on_goal: 3,
+                  own_goals: -0.69
                 }
                 for (const game of res.data) {
                   eloAlgorithm3(game, weights)
