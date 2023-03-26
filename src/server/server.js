@@ -54,6 +54,7 @@ app.post('/api/games', (req, res) => {
                 date: game.date,
                 game_time: game.game_time,
                 binary_id: game.binary_id,
+                elo_change: game.elo_change
             }, 'id')
             .then((data) => {
                 console.log(data)
@@ -64,6 +65,26 @@ app.post('/api/games', (req, res) => {
                 res.statusMessage = "Unique key restraint violated"
                 res.status(500).json({"string": "String"}).end()
             });
+})
+
+app.put('/api/games', (req, res) => {
+    let games = req.body.games
+    return db.transaction(trx => {
+        const queries = [];
+        games.forEach(game => {
+            const query = db('Games')
+                .where('id', game.id)
+                .update({
+                    elo_change: game.elo_change,
+                })
+                .transacting(trx); // This makes every update be in the same transaction
+            queries.push(query);
+        });
+
+        Promise.all(queries) // Once every query is written
+            .then(trx.commit) // We try to execute all of them
+            .catch(trx.rollback); // And rollback in case any of them goes wrong
+    });
 })
 
 app.delete('/api/games', (req, res) => {

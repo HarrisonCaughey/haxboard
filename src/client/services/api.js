@@ -21,6 +21,13 @@ export function saveGame(game) {
         })
 }
 
+export function updateGames(games) {
+    return axios.put(`${serverPath}/api/games`, {games: games})
+        .catch((err) => {
+            console.error(err);
+        })
+}
+
 export function deleteGame(id) {
     return axios.delete(`${serverPath}/api/games`, {data : {id: id}})
             .catch((err) => {
