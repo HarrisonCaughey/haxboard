@@ -289,7 +289,22 @@ export async function saveGames(file, games) {
       binary_id: binaryId
     }
 
+    for (let i = 0; i < playerStats.length; i++) {
+      playerStats[i] = {
+        player_id: playerStats[i].id,
+        goals: playerStats[i].goals,
+        assists: playerStats[i].assists,
+        kicks: playerStats[i].kicks,
+        passes: playerStats[i].passes,
+        shots_on_goal: playerStats[i].shots,
+        own_goals: playerStats[i].ownGoals,
+        won: playerStats[i].won
+      }
+    }
+
     if (checkGameValidity(cleanGame)) {
+      // need to augment game with other stats in here
+      augmentGame(playerStats, cleanGame)
       setPlayersElo(cleanGame)
       await saveGame(cleanGame).then(async (result) => {
         let gameId = result[0].id
@@ -298,6 +313,7 @@ export async function saveGames(file, games) {
         i++
       }).catch((err) => {
         // TODO: make specific error for duplicate games
+        console.log(err)
         toastr.error(`Failed saving Game ${i}. It's probably a duplicate`)
         i++
       })
@@ -331,7 +347,7 @@ function getDateFromFile(file) {
 function checkGameValidity(game) {
   // score check
   if (game.red_score === game.blue_score) return false;
-  if (game.red_score < 1 && game.blue_score < 1) return false;
+  if (game.red_score < 3 && game.blue_score < 3) return false;
   if (game.red_score > 5 || game.blue_score > 5) return false;
   //player check
   if (game.red_team.length !== game.blue_team.length) return false;
@@ -345,35 +361,21 @@ function calculateMvp() {
   return 0;
 }
 
-function calculateOwnGoals() {
-  return 0;
-}
-
 async function savePlayerStats(gameId, playerStats) {
   for (const player of playerStats) {
-    let cleanPlayerGamestats = {
-      game_id: gameId,
-      player_id: player.id,
-      goals: player.goals,
-      assists: player.assists,
-      kicks: player.kicks,
-      passes: player.passes,
-      shots_on_goal: player.shots,
-      own_goals: player.ownGoals,
-      won: player.won
-    }
+    player.game_id = gameId
 
-    await savePlayerGameStats(cleanPlayerGamestats).catch((err) => console.log(err))
+    await savePlayerGameStats(player).catch((err) => console.log(err))
 
-    let oldPlayer = dbPlayers[player.id]
+    let oldPlayer = dbPlayers[player.player_id]
     oldPlayer.games_played += 1
     oldPlayer.games_won = player.won ? oldPlayer.games_won + 1 : oldPlayer.games_won
-    oldPlayer.goals += cleanPlayerGamestats.goals
-    oldPlayer.assists += cleanPlayerGamestats.assists
-    oldPlayer.kicks += cleanPlayerGamestats.kicks
-    oldPlayer.passes += cleanPlayerGamestats.passes
-    oldPlayer.shots_on_goal += cleanPlayerGamestats.shots_on_goal
-    oldPlayer.own_goals += cleanPlayerGamestats.own_goals
+    oldPlayer.goals += player.goals
+    oldPlayer.assists += player.assists
+    oldPlayer.kicks += player.kicks
+    oldPlayer.passes += player.passes
+    oldPlayer.shots_on_goal += player.shots_on_goal
+    oldPlayer.own_goals += player.own_goals
     let updatedPlayer = {
       games_played: oldPlayer.games_played,
       games_won: oldPlayer.games_won,
@@ -386,7 +388,7 @@ async function savePlayerStats(gameId, playerStats) {
       shots_on_goal: oldPlayer.shots_on_goal,
       own_goals: oldPlayer.own_goals
     }
-    await updatePlayer(updatedPlayer, player.id).catch((err) => console.log(err))
+    await updatePlayer(updatedPlayer, player.player_id).catch((err) => console.log(err))
   }
 }
 
@@ -549,12 +551,13 @@ function eloAlgorithm3(game, weights) {
 
     // Adjust individual elo gain based on predicted result
     eloGain += predictionValue * 3
-    // Adjust individual elo gain based on score only if it's a BO3
+    // Adjust individual elo gain based on score only if it's a first to 3
     if (Math.max(game.red_score, game.blue_score) === 3) {
       eloGain = adjustEloBasedOnScore(eloGain, Math.min(game.red_score, game.blue_score))
     }
+    eloGain = Math.round(eloGain)
     game.elo_change = eloGain
-    individualElo = Math.round(individualElo + eloGain)
+    individualElo = individualElo + eloGain
 
     dbPlayers[winner].elo = individualElo
   }
@@ -570,7 +573,7 @@ function eloAlgorithm3(game, weights) {
 
     // Adjust individual elo gain based on predicted result
     eloLoss += predictionValue * 3
-    // Adjust individual elo loss based on score only if it's a BO3
+    // Adjust individual elo loss based on score only if it's a first to 3
     if (Math.max(game.red_score, game.blue_score) === 3) {
       eloLoss = adjustEloBasedOnScore(eloLoss, Math.min(game.red_score, game.blue_score))
     }
@@ -647,50 +650,54 @@ function augmentGames(gameStats, games) {
   // for each game, compile the associated player-game rows into relevant data
   // e.g difference in kicks, difference in possession, etc
   for (const game of games) {
-    // statsObject represents the fraction of parameters the winning team has vs the losing team
-    let winnerStatsObject = {
-      kicks: 0,
-      possession: 0,
-      passes: 0,
-      shots_on_goal: 0,
-      own_goals: 0
-    }
-    let totalStatsObject = {
-      kicks: 0,
-      possession: 0,
-      passes: 0,
-      shots_on_goal: 0,
-      own_goals: 0
-    }
-    let players = game.red_team.concat(game.blue_team)
-    for (const player of players) {
-      let stats = gameStats.filter(stat => stat.player_id === player && stat.game_id === game.id)[0]
-      if (stats.won) {
-        winnerStatsObject.kicks += stats.kicks
-        winnerStatsObject.possession += stats.possession
-        winnerStatsObject.passes += stats.passes
-        winnerStatsObject.shots_on_goal += stats.shots_on_goal
-        winnerStatsObject.own_goals += stats.own_goals
-      }
-      totalStatsObject.kicks += stats.kicks
-      totalStatsObject.possession += stats.possession
-      totalStatsObject.passes += stats.passes
-      totalStatsObject.shots_on_goal += stats.shots_on_goal
-      totalStatsObject.own_goals += stats.own_goals
-    }
-    game.winnerStats = {
-      kicks: totalStatsObject.kicks === 0 ? 0 :
-          (winnerStatsObject.kicks / totalStatsObject.kicks) - (1 - (winnerStatsObject.kicks / totalStatsObject.kicks)),
-      possession: game.red_score > game.blue_score ? (game.red_possession - game.blue_possession) / 100 : (game.blue_possession - game.red_possession) / 100,
-      passes: totalStatsObject.passes === 0 ? 0 :
-          (winnerStatsObject.passes / totalStatsObject.passes) - (1 - (winnerStatsObject.passes / totalStatsObject.passes)),
-      shots_on_goal: totalStatsObject.shots_on_goal === 0 ? 0 :
-          (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal) - (1 - (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal)),
-      own_goals: totalStatsObject.own_goals === 0 ? 0 :
-          (winnerStatsObject.own_goals / totalStatsObject.own_goals) - (1 - (winnerStatsObject.own_goals / totalStatsObject.own_goals))
-    }
+    augmentGame(gameStats, game)
   }
   return games
+}
+
+function augmentGame(gameStats, game) {
+  // statsObject represents the fraction of parameters the winning team has vs the losing team
+  let winnerStatsObject = {
+    kicks: 0,
+    possession: 0,
+    passes: 0,
+    shots_on_goal: 0,
+    own_goals: 0
+  }
+  let totalStatsObject = {
+    kicks: 0,
+    possession: 0,
+    passes: 0,
+    shots_on_goal: 0,
+    own_goals: 0
+  }
+  let players = game.red_team.concat(game.blue_team)
+  for (const player of players) {
+    let stats = gameStats.filter(stat => stat.player_id === player && stat.game_id === game.id)[0]
+    if (stats.won) {
+      winnerStatsObject.kicks += stats.kicks
+      winnerStatsObject.possession += stats.possession
+      winnerStatsObject.passes += stats.passes
+      winnerStatsObject.shots_on_goal += stats.shots_on_goal
+      winnerStatsObject.own_goals += stats.own_goals
+    }
+    totalStatsObject.kicks += stats.kicks
+    totalStatsObject.possession += stats.possession
+    totalStatsObject.passes += stats.passes
+    totalStatsObject.shots_on_goal += stats.shots_on_goal
+    totalStatsObject.own_goals += stats.own_goals
+  }
+  game.winnerStats = {
+    kicks: totalStatsObject.kicks === 0 ? 0 :
+        (winnerStatsObject.kicks / totalStatsObject.kicks) - (1 - (winnerStatsObject.kicks / totalStatsObject.kicks)),
+    possession: game.red_score > game.blue_score ? (game.red_possession - game.blue_possession) / 100 : (game.blue_possession - game.red_possession) / 100,
+    passes: totalStatsObject.passes === 0 ? 0 :
+        (winnerStatsObject.passes / totalStatsObject.passes) - (1 - (winnerStatsObject.passes / totalStatsObject.passes)),
+    shots_on_goal: totalStatsObject.shots_on_goal === 0 ? 0 :
+        (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal) - (1 - (winnerStatsObject.shots_on_goal / totalStatsObject.shots_on_goal)),
+    own_goals: totalStatsObject.own_goals === 0 ? 0 :
+        (winnerStatsObject.own_goals / totalStatsObject.own_goals) - (1 - (winnerStatsObject.own_goals / totalStatsObject.own_goals))
+  }
 }
 
 async function calculateWeights() {

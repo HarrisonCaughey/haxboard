@@ -54,7 +54,7 @@ export class GameHistory extends React.Component {
                     headerName: 'Blue Team',
                     width: 200,
                     sortable: false,
-                     sortingOrder: ['desc', 'asc'],
+                    sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.blue_team)}`,
                     cellClassName: (params) => {
@@ -62,10 +62,19 @@ export class GameHistory extends React.Component {
                     }
 
                 },
-                { field: 'red_possession', headerName: 'R%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
+                { field: 'red_possession', headerName: 'R%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
                 { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
+                {
+                    field: 'elo_change',
+                    headerName: 'ELO Change',
+                    width: 110,
+                    sortable: true,
+                    sortingOrder: ['desc', 'asc'],
+                    valueGetter: (params) =>
+                        `+ / - ${params.row.elo_change}`,
+                },
             ]
         }
     }
