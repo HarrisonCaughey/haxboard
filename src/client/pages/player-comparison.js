@@ -99,7 +99,6 @@ export class PlayerComparison extends React.Component {
                     cellClassName: (params) => {
                         return params.row.blue_score > params.row.red_score ? "glowing-cell" : null
                     }
-
                 },
                 { field: 'red_possession', headerName: 'R%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
@@ -260,17 +259,21 @@ export class PlayerComparison extends React.Component {
         let totalGameTime = 0
         for (let game of this.state.filteredGames) {
             let winRecorded = false
+            let goalsRecorded = false
 
             // Calculate game time
             totalGameTime += game.og_game_time
             for (let player of this.state.team1) {
                 // Calculate goals
-                if (game.red_team_names.includes(player)) {
-                    team1Goals += game.red_score
-                    team2Goals += game.blue_score
-                } else {
-                    team2Goals += game.red_score
-                    team1Goals += game.blue_score
+                if (!goalsRecorded) {
+                    if (game.red_team_names.includes(player)) {
+                        team1Goals += game.red_score
+                        team2Goals += game.blue_score
+                    } else {
+                        team2Goals += game.red_score
+                        team1Goals += game.blue_score
+                    }
+                    goalsRecorded = true
                 }
 
                 // Calculate wins if we haven't yet

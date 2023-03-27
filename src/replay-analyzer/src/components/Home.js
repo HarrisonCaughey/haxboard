@@ -440,89 +440,18 @@ function createPlayersMap(data) {
 
 function setPlayersElo(game) {
   let weights = {
-    kicks: -2.5,
-    possession: 4.7,
-    passes: -1.27,
-    shots_on_goal: 3,
+    kicks: -2,
+    possession: 1.5,
+    passes: 0,
+    shots_on_goal: 1,
     own_goals: -0.69
   }
-  eloAlgorithm3(game, weights)
+  eloAlgorithm(game, weights)
 }
-
-// Classical chess elo adjusted distribute elo to team members based on their perceived contribution to the game
-// ie. the higher elo player in a winning team gets a high proportion of elo (as the model expects they contributed more)
-function eloAlgorithm1(game) {
-  // TODO figure out why people are losing more elo than they're gaining
-  let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
-  let winners = winnerStr === "red" ? game.red_team : game.blue_team;
-  let losers = winnerStr === "red" ? game.blue_team : game.red_team;
-  let redTeamElo = 0;
-  let blueTeamElo = 0;
-  for (let i = 0; i < game.red_team.length; i++) {
-    const id = game.red_team[i]
-    redTeamElo += dbPlayers[id].elo
-  }
-  for (let i = 0; i < game.blue_team.length; i++) {
-    const id = game.blue_team[i]
-    blueTeamElo += dbPlayers[id].elo
-  }
-  let r1 = Math.pow(10, redTeamElo / 400)
-  let r2 = Math.pow(10, blueTeamElo / 400)
-  let e1 = r1 / (r1 + r2)
-  let e2 = r2 / (r2 + r1)
-  for (let i = 0; i < winners.length; i++) {
-    let winner = winners[i]
-    let individualElo = dbPlayers[winner].elo
-    individualElo = Math.round(individualElo + ELO_VOLATILITY * (1 - e1) * (individualElo / (winnerStr === "red" ? redTeamElo : blueTeamElo)))
-    dbPlayers[winner].elo = individualElo
-  }
-  losers = losers.map(loser => loser = {id: loser, elo: dbPlayers[loser].elo})
-  losers.sort(function (a, b) { return a.elo - b.elo })
-  for (let i = 0; i < losers.length; i++) {
-    let loser = losers[i]
-    dbPlayers[loser.id].elo = Math.round(loser.elo - ELO_VOLATILITY * (1 - e2) * (losers.at((i + 1) * -1).elo / (winnerStr === "red" ? blueTeamElo : redTeamElo)))
-  }
-}
-
-// Classical chess elo adjusted to distribute elo to team members evenly
-// Net elo gain/loss is calculated on a team v team basis
-function eloAlgorithm2(game) {
-  let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
-  let winners = winnerStr === "red" ? game.red_team : game.blue_team;
-  let losers = winnerStr === "red" ? game.blue_team : game.red_team;
-  let redTeamElo = 0;
-  let blueTeamElo = 0;
-  for (let i = 0; i < game.red_team.length; i++) {
-    const id = game.red_team[i]
-    redTeamElo += dbPlayers[id].elo
-  }
-  for (let i = 0; i < game.blue_team.length; i++) {
-    const id = game.blue_team[i]
-    blueTeamElo += dbPlayers[id].elo
-  }
-  let r1 = Math.pow(10, redTeamElo / 400)
-  let r2 = Math.pow(10, blueTeamElo / 400)
-  let e1 = r1 / (r1 + r2)
-  let e2 = r2 / (r2 + r1)
-  for (let i = 0; i < winners.length; i++) {
-    let winner = winners[i]
-    let individualElo = dbPlayers[winner].elo
-    individualElo = Math.round(individualElo + ((ELO_VOLATILITY * (1 - e1)) / winners.length))
-    dbPlayers[winner].elo = individualElo
-  }
-  for (let i = 0; i < losers.length; i++) {
-    let loser = losers[i]
-    let individualElo = dbPlayers[loser].elo
-    individualElo = Math.round(individualElo - ((ELO_VOLATILITY * (1 - e2)) / losers.length))
-    dbPlayers[loser].elo = individualElo
-  }
-}
-
-let nan = false
 
 // Classical chess elo adjusted to distribute elo based on each players elo vs the average elo of the opposing team
 // Additionally adjusts elo based on score differential and uses a predictive model to give the "better" team an elo boost.
-function eloAlgorithm3(game, weights) {
+function eloAlgorithm(game, weights) {
   let predictionValue = getPredictedWinner(weights, game.winnerStats)
   let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
   let winners = winnerStr === "red" ? game.red_team : game.blue_team;
@@ -550,7 +479,7 @@ function eloAlgorithm3(game, weights) {
     let eloGain = ELO_VOLATILITY * (1 - e1)
 
     // Adjust individual elo gain based on predicted result
-    eloGain += predictionValue * 3
+    eloGain += predictionValue * 5
     // Adjust individual elo gain based on score only if it's a first to 3
     if (Math.max(game.red_score, game.blue_score) === 3) {
       eloGain = adjustEloBasedOnScore(eloGain, Math.min(game.red_score, game.blue_score))
@@ -572,7 +501,7 @@ function eloAlgorithm3(game, weights) {
     let eloLoss = (ELO_VOLATILITY * (1 - e2))
 
     // Adjust individual elo gain based on predicted result
-    eloLoss += predictionValue * 3
+    eloLoss += predictionValue * 5
     // Adjust individual elo loss based on score only if it's a first to 3
     if (Math.max(game.red_score, game.blue_score) === 3) {
       eloLoss = adjustEloBasedOnScore(eloLoss, Math.min(game.red_score, game.blue_score))
@@ -597,10 +526,10 @@ function adjustEloBasedOnScore(elo, loserScore) {
 
 async function recalculateElo() {
   let weights = {
-    kicks: -2.5,
-    possession: 4.7,
-    passes: -1.27,
-    shots_on_goal: 3,
+    kicks: -2,
+    possession: 1.5,
+    passes: 0,
+    shots_on_goal: 1,
     own_goals: -0.69
   }
   getPlayers().then(res => {
@@ -611,24 +540,30 @@ async function recalculateElo() {
     }
     getGames().then(async res => {
       let games = res.data
-      await getPlayerGameStats().then(res => {
+      await getPlayerGameStats().then(async res => {
         games = augmentGames(res.data, games);
         let correctPredictions = 0
         for (const game of games) {
-          let predictionResult = eloAlgorithm3(game, weights)
+          let predictionResult = eloAlgorithm(game, weights)
           if (predictionResult) {
             correctPredictions += 1
           }
         }
-        // await pushEloToDatabase(games)
+        await pushEloToDatabase(games)
         console.log(correctPredictions)
+        console.log(dbPlayers)
       })
     })
   })
-  console.log(dbPlayers)
 }
 
 async function pushEloToDatabase(games) {
+  for (let i = 0; i < games.length; i++) {
+    games[i] = {
+      id: games[i].id,
+      elo_change: games[i].elo_change
+    }
+  }
   await updateGames(games)
   for (let i = 1; i <= _.size(dbPlayers); i++) {
     const player = dbPlayers[i]
@@ -702,7 +637,7 @@ function augmentGame(gameStats, game) {
 
 async function calculateWeights() {
 
-  let possibleWeights = [-2.5, -1.27, 4.7, 3, -0.69]
+  let possibleWeights = [-2.5, -1.27, 4.7, 3, -0.69, -3.5, -3, -2, -1.5, -1, 0, 0.5, 1, 1.5, 2, 2.5, 3.5, 4]
 
   // get games and player-game-stats for each of those games
   console.log("Calculate weights")
@@ -738,7 +673,7 @@ async function calculateWeights() {
                 }
                 let numberPredicted = 0
                 for (const game of res.data) {
-                  let correctPrediction = eloAlgorithm3(game, weights)
+                  let correctPrediction = eloAlgorithm(game, weights)
                   if (correctPrediction) {
                     numberPredicted++
                   }
@@ -755,14 +690,14 @@ async function calculateWeights() {
 
       // TODO - use this at line 293 when model is finalized
       let weights = {
-                  kicks: -2.5,
-                  possession: 4.7,
-                  passes: -1.27,
-                  shots_on_goal: 3,
-                  own_goals: -0.69
-                }
+                    kicks: -2,
+                    possession: 1.5,
+                    passes: 0,
+                    shots_on_goal: 1,
+                    own_goals: -0.69
+                  }
                 for (const game of res.data) {
-                  eloAlgorithm3(game, weights)
+                  eloAlgorithm(game, weights)
                 }
 
 
