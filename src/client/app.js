@@ -8,6 +8,7 @@ import {PlayerStats} from "./pages/player-stats";
 import {GameHistory} from "./pages/game-history";
 import ReplayWrapper from "../replay-analyzer/src/App";
 import {PlayerComparison} from "./pages/player-comparison";
+import {Trophies} from "./pages/trophies";
 
 export class App extends React.Component {
 
@@ -23,6 +24,7 @@ export class App extends React.Component {
                 <Route path="/stats" component={PlayerStats}/>
                 <Route path="/compare" component={PlayerComparison}/>
                 <Route exact path="/" component={GameHistory}/>
+                <Route exact path="/trophies" component={Trophies}/>
                 <Redirect to={"/"} />
             </Switch>
         </div>;
