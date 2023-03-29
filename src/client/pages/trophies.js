@@ -118,29 +118,6 @@ export class Trophies extends React.Component {
                     return (g1.id - g2.id)
                 })
                 this.setState({ games: games, filteredGames: filteredGames });
-                console.log(this.state.filteredGames[0])
-                console.log(this.state.filteredGames)
-
-                let elo = 1000
-                let wins = 0
-                let losses = 0
-                // TODO elo change has to be fucked
-                for (let game of games) {
-                    let winners = game.red_score > game.blue_score ? game.red_team : game.blue_team
-                    let losers = game.red_score < game.blue_score ? game.red_team : game.blue_team
-                    let winner = winners.filter(winner => winner === 1)
-                    let loser = losers.filter(loser => loser === 1)
-                    if (winner.length !== 0) {
-                        elo += game.elo_change
-                        wins++
-                    } else if (loser.length !== 0) {
-                        elo -= game.elo_change
-                        losses++
-                    }
-                }
-                console.log(elo)
-                console.log(wins)
-                console.log(losses)
 
                 this.calculateStats()
             })
@@ -182,17 +159,15 @@ export class Trophies extends React.Component {
         for (let i = 0; i < players.length; i++) {
             let player = players[i]
             player.max_elo = 1000
+            player.lowest_elo = 1000
+            player.elo = 1000
             player.winning_streak = 0
             player.current_winning_streak = 0
             player.losing_streak = 0
             player.current_losing_streak = 0
-            player.first_place_streak = 0
+            player.max_first_place_streak = 0
             player.current_first_place_streak = 0
-            player.lowest_elo = 1000
-            player.current_lowest_elo = 1000
-            player.elo = 1000
         }
-        console.log(JSON.parse(JSON.stringify(this.state.players)))
     }
 
     calculateStats() {
@@ -215,24 +190,33 @@ export class Trophies extends React.Component {
             let players = game.red_team.concat(game.blue_team)
             for (let i = 0; i < winners.length; i++) {
                 let winner = this.state.players.filter(player => player.id === winners[i])[0]
-                winner.elo += game.elo_change
+                winner.elo += game.elo_change[i]
                 winner.current_losing_streak = 0
                 winner.current_winning_streak += 1
                 if (winner.current_winning_streak > winner.winning_streak) {
                     winner.winning_streak = winner.current_winning_streak
                 }
+                if (winner.elo > winner.max_elo) {
+                    winner.max_elo = winner.elo
+                }
 
             }
             for (let i = 0; i < losers.length; i++) {
                 let loser = this.state.players.filter(player => player.id === losers[i])[0]
-                loser.elo -= game.elo_change
+                loser.elo -= game.elo_change[i + game.elo_change.length / 2]
                 loser.current_winning_streak = 0
                 loser.current_losing_streak += 1
                 if (loser.current_losing_streak > loser.losing_streak) {
                     loser.losing_streak = loser.current_losing_streak
                 }
+                if (loser.elo < loser.lowest_elo) {
+                    loser.lowest_elo = loser.elo
+                }
             }
             let maxElo = Math.max(...this.state.players.map(player => player.elo))
+            let numberOne = this.state.players.sort((p1, p2) => {
+                return (p2.elo - p1.elo)
+            })
             for (let i = 0; i < players.length; i++) {
                 let player = this.state.players.filter(player => player.id === player[i])[0]
 

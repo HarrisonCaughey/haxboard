@@ -107,11 +107,11 @@ export class PlayerComparison extends React.Component {
                 {
                     field: 'elo_change',
                     headerName: 'ELO Change',
-                    width: 110,
+                    width: 150,
                     sortable: true,
                     sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
-                        `+ / - ${params.row.elo_change}`,
+                        this.getEloChange(params.row),
                 },
             ]
         }
@@ -146,6 +146,19 @@ export class PlayerComparison extends React.Component {
             names += member + ', '
         }
         return names.slice(0, -2)
+    }
+
+    getEloChange(row) {
+        let winnerStr = row.red_score > row.blue_score ? "red" : "blue";
+        let eloChange = row.elo_change
+        let augmentedEloChange = []
+        for (let i = 0; i < eloChange.length; i++) {
+            augmentedEloChange.push((i < (eloChange.length / 2)) ? `+${eloChange[i]}` : `-${eloChange[i]}`)
+        }
+        if (winnerStr === "blue") {
+            augmentedEloChange = augmentedEloChange.slice(eloChange.length / 2).concat(augmentedEloChange.slice(0, eloChange.length / 2))
+        }
+        return augmentedEloChange.join(' | ')
     }
 
     parseTime(gt) {

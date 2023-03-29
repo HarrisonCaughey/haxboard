@@ -452,6 +452,7 @@ function setPlayersElo(game) {
 // Classical chess elo adjusted to distribute elo based on each players elo vs the average elo of the opposing team
 // Additionally adjusts elo based on score differential and uses a predictive model to give the "better" team an elo boost.
 function eloAlgorithm(game, weights) {
+  let changes = []
   let predictionValue = getPredictedWinner(weights, game.winnerStats)
   let winnerStr = game.red_score > game.blue_score ? "red" : "blue";
   let winners = winnerStr === "red" ? game.red_team : game.blue_team;
@@ -485,7 +486,7 @@ function eloAlgorithm(game, weights) {
       eloGain = adjustEloBasedOnScore(eloGain, Math.min(game.red_score, game.blue_score))
     }
     eloGain = Math.round(eloGain)
-    game.elo_change = eloGain
+    changes.push(eloGain)
     individualElo = individualElo + eloGain
 
     dbPlayers[winner].elo = individualElo
@@ -506,11 +507,13 @@ function eloAlgorithm(game, weights) {
     if (Math.max(game.red_score, game.blue_score) === 3) {
       eloLoss = adjustEloBasedOnScore(eloLoss, Math.min(game.red_score, game.blue_score))
     }
-
-    individualElo = Math.round(individualElo - eloLoss)
+    eloLoss = Math.round(eloLoss)
+    changes.push(eloLoss)
+    individualElo = individualElo - eloLoss
 
     dbPlayers[loser].elo = individualElo
   }
+  game.elo_change = changes
   return predictionValue > 0
 }
 
@@ -525,6 +528,7 @@ function adjustEloBasedOnScore(elo, loserScore) {
 }
 
 async function recalculateElo() {
+
   let weights = {
     kicks: -2,
     possession: 1.5,
@@ -539,7 +543,9 @@ async function recalculateElo() {
       player.elo = 1000
     }
     getGames().then(async res => {
-      let games = res.data
+      let games = res.data.sort((g1, g2) => {
+        return (g1.id - g2.id)
+      })
       await getPlayerGameStats().then(async res => {
         games = augmentGames(res.data, games);
         let correctPredictions = 0
@@ -583,11 +589,11 @@ function getPredictedWinner(weights, stats) {
   return prediction
 }
 
-function augmentGames(gameStats, games) {
+function augmentGames(playerStats, games) {
   // for each game, compile the associated player-game rows into relevant data
   // e.g difference in kicks, difference in possession, etc
   for (const game of games) {
-    augmentGame(gameStats, game)
+    augmentGame(playerStats, game)
   }
   return games
 }
