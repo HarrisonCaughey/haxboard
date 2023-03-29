@@ -104,6 +104,15 @@ export class PlayerComparison extends React.Component {
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
                 { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
+                {
+                    field: 'elo_change',
+                    headerName: 'ELO Change',
+                    width: 110,
+                    sortable: true,
+                    sortingOrder: ['desc', 'asc'],
+                    valueGetter: (params) =>
+                        `+ / - ${params.row.elo_change}`,
+                },
             ]
         }
     }

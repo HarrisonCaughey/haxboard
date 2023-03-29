@@ -564,7 +564,9 @@ async function pushEloToDatabase(games) {
       elo_change: games[i].elo_change
     }
   }
-  await updateGames(games)
+  for (let game of games) {
+    await updateGames(game)
+  }
   for (let i = 1; i <= _.size(dbPlayers); i++) {
     const player = dbPlayers[i]
     await updatePlayerElo(player.elo, player.id)

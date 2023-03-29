@@ -124,12 +124,12 @@ export class Trophies extends React.Component {
                 let elo = 1000
                 let wins = 0
                 let losses = 0
+                // TODO elo change has to be fucked
                 for (let game of games) {
                     let winners = game.red_score > game.blue_score ? game.red_team : game.blue_team
                     let losers = game.red_score < game.blue_score ? game.red_team : game.blue_team
                     let winner = winners.filter(winner => winner === 1)
                     let loser = losers.filter(loser => loser === 1)
-                    console.log(winner)
                     if (winner.length !== 0) {
                         elo += game.elo_change
                         wins++
@@ -142,7 +142,7 @@ export class Trophies extends React.Component {
                 console.log(wins)
                 console.log(losses)
 
-                //this.calculateStats()
+                this.calculateStats()
             })
         })
     }

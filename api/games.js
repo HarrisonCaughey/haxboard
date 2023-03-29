@@ -62,23 +62,32 @@ async function games(req, res) {
                 res.status(500).end()
             });
     }  else if (req.method === 'PUT') {
-        let games = req.body.games
-        return db.transaction(trx => {
-            const queries = [];
-            games.forEach(game => {
-                const query = db('Games')
-                    .where('id', game.id)
-                    .update({
-                        elo_change: game.elo_change,
-                    })
-                    .transacting(trx);
-                queries.push(query);
-            });
-
-            Promise.all(queries)
-                .then(trx.commit)
-                .catch(trx.rollback);
-        });
+        let game = req.body.games
+        db('Games').where({id: game.id})
+            .update({
+                elo_change: game.elo_change,
+            })
+            .then((data) => {
+                res.json(data);
+            }).catch((err) => {
+            console.log(err)
+        })
+        // return db.transaction(trx => {
+        //     const queries = [];
+        //     games.forEach(game => {
+        //         const query = db('Games')
+        //             .where('id', game.id)
+        //             .update({
+        //                 elo_change: game.elo_change,
+        //             })
+        //             .transacting(trx);
+        //         queries.push(query);
+        //     });
+        //
+        //     Promise.all(queries)
+        //         .then(trx.commit)
+        //         .catch(trx.rollback);
+        // });
     } else if (req.method === 'DELETE') {
         let id = req.body.id
         db('Games').where({id: id}).del()
