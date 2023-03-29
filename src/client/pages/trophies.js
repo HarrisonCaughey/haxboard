@@ -38,16 +38,9 @@ export class Trophies extends React.Component {
             games: [],
             filteredGames: [],
             players: null,
-            team1: [],
-            team2: [],
-            team1Relation: "has exactly",
-            team2Relation: "contains",
             startDate: null,
             endDate: null,
-            wlr: 0,
-            totalGames: 0,
-            totalGoals: [0, 0],
-            totalGameTime: 0,
+            teams: null,
             columns: [
                 {
                     field: 'date',
@@ -100,7 +93,6 @@ export class Trophies extends React.Component {
     componentDidMount() {
         getPlayers().then((players) => {
             this.setState({ players: players.data });
-            console.log(JSON.parse(JSON.stringify(this.state.players)))
             getGames().then(res => {
                 let games = res.data
                 games.forEach((game) => {
@@ -180,14 +172,62 @@ export class Trophies extends React.Component {
         * Highest win/rate teams
          */
         this.augmentPlayers()
-
-        let currentNumberOne = []
+        let teams = {
+            "12" : {
+                wins: 0,
+                total: 0
+            },
+            "13" : {
+                wins: 0,
+                total: 0
+            },
+            "14" : {
+                wins: 0,
+                total: 0
+            },
+            "15" : {
+                wins: 0,
+                total: 0
+            },
+            "23" : {
+                wins: 0,
+                total: 0
+            },
+            "24" : {
+                wins: 0,
+                total: 0
+            },
+            "25" : {
+                wins: 0,
+                total: 0
+            },
+            "34" : {
+                wins: 0,
+                total: 0
+            },
+            "35" : {
+                wins: 0,
+                total: 0
+            },
+            "45" : {
+                wins: 0,
+                total: 0
+            },
+        }
 
         // Loop through all games, adding/subtracting elo from scratch to calculate stats
         for (let game of this.state.filteredGames) {
-            let winners = game.red_score > game.blue_score ? game.red_team : game.blue_team
-            let losers = game.red_score < game.blue_score ? game.red_team : game.blue_team
-            let players = game.red_team.concat(game.blue_team)
+            let winners = game.red_score > game.blue_score ? game.red_team.sort() : game.blue_team.sort()
+            let losers = game.red_score < game.blue_score ? game.red_team.sort() : game.blue_team.sort()
+
+            if (teams[winners.join('')]) {
+                teams[winners.join('')].wins++
+                teams[winners.join('')].total++
+            }
+            if (teams[losers.join('')]) {
+                teams[losers.join('')].total++
+            }
+
             for (let i = 0; i < winners.length; i++) {
                 let winner = this.state.players.filter(player => player.id === winners[i])[0]
                 winner.elo += game.elo_change[i]
@@ -214,16 +254,21 @@ export class Trophies extends React.Component {
                 }
             }
             let maxElo = Math.max(...this.state.players.map(player => player.elo))
-            let numberOne = this.state.players.sort((p1, p2) => {
-                return (p2.elo - p1.elo)
-            })
-            for (let i = 0; i < players.length; i++) {
-                let player = this.state.players.filter(player => player.id === player[i])[0]
 
+            for (let i = 0; i < this.state.players.length; i++) {
+                let player = this.state.players[i]
+                if (player.elo === maxElo) {
+                    player.current_first_place_streak += 1
+                    if (player.current_first_place_streak > player.max_first_place_streak) {
+                        player.max_first_place_streak = player.current_first_place_streak
+                    }
+                } else {
+                    player.current_first_place_streak = 0
+                }
             }
 
         }
-        console.log(this.state.players)
+        this.setState({teams: teams})
     }
 
     render() {
