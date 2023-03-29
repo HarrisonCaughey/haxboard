@@ -181,7 +181,7 @@ export class Trophies extends React.Component {
          */
         this.augmentPlayers()
 
-        let currentNumberOne = null
+        let currentNumberOne = []
 
         // Loop through all games, adding/subtracting elo from scratch to calculate stats
         for (let game of this.state.filteredGames) {
