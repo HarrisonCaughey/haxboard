@@ -333,7 +333,7 @@ function getPseuds(listOfNicks) {
       homeInstance.openConfirmModal()
     }
   })
-  return listOfIds
+  return listOfIds.sort()
 }
 
 
@@ -567,7 +567,7 @@ async function pushEloToDatabase(games) {
   for (let i = 0; i < games.length; i++) {
     games[i] = {
       id: games[i].id,
-      elo_change: games[i].elo_change
+      elo_change: games[i].elo_change,
     }
   }
   for (let game of games) {

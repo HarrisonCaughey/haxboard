@@ -71,7 +71,7 @@ app.put('/api/games', (req, res) => {
     let game = req.body.games
     db('Games').where({id: game.id})
         .update({
-            elo_change: game.elo_change,
+            elo_change: game.elo_change
         })
         .then((data) => {
             res.json(data);

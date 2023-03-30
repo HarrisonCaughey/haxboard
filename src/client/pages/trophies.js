@@ -112,6 +112,7 @@ export class Trophies extends React.Component {
                 this.setState({ games: games, filteredGames: filteredGames });
 
                 this.calculateStats()
+                console.log(this.state.players)
             })
         })
     }
