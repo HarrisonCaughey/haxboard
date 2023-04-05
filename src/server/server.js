@@ -214,9 +214,11 @@ app.get('/api/binary', (req, res) => {
 
 app.post('/api/binary', (req, res) => {
     let file = req.body.file
+    let file_name = req.body.file_name
     db('Binaries').insert(
         {
-            file: file
+            file: db.raw('?', file),
+            file_name: file_name
         })
         .then((data) => {
             console.log(data)

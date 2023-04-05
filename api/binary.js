@@ -24,10 +24,12 @@ async function binary(req, res) {
             });
     } else if (req.method === 'POST') {
         let file = req.body.file
+        let file_name = req.body.file_name
         db('Binaries').insert(
             {
-                file: file
-            })
+                file: db.raw('?', file),
+                file_name: file_name
+            }, 'id')
             .then((data) => {
                 console.log(data)
                 res.json(data);

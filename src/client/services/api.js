@@ -103,8 +103,8 @@ export function getBinaries() {
         })
 }
 
-export function saveBinaryFile(file) {
-    return axios.post(`${serverPath}/api/binary`, {file: file})
+export function saveBinaryFile(file, file_name) {
+    return axios.post(`${serverPath}/api/binary`, {file: file, file_name: file_name})
         .then((res) => {
             return res.data
         })

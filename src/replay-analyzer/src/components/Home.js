@@ -10,10 +10,11 @@ import {setDivStyle, setPlayerList, setPlayerPos, setStats} from "../slices/game
 import GameStats from "./game stats/GameStats";
 import React, {useState} from "react";
 import {
+  getBinaries,
   getGames,
   getPlayerGameStats,
   getPlayers,
-  getPseudonyms,
+  getPseudonyms, saveBinaryFile,
   saveGame,
   savePlayerGameStats, updateGame, updateGames,
   updatePlayer,
@@ -23,8 +24,10 @@ import toastr from "toastr";
 import {ELO_VOLATILITY} from "../../../client/constants/pages";
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
+import playerStats from "./game stats/PlayerStats";
 
 var _ = require('lodash');
+// const bytea = require('postgres-bytea')
 
 export function showStats() { }
 export function setGameStats() { }
@@ -120,6 +123,67 @@ function Home() {
     await handleFiles(files)
   }
 
+  async function handleBinaryChange(e) {
+    let file = document.querySelector("#replayfile3").files[0];
+
+    let reader = new FileReader;
+    reader.onload = async function () {
+      console.log(reader.result)
+      let encodedString = encodeBinary(reader.result)
+      console.log(encodedString)
+      await saveBinaryFile(encodedString, file.name)
+    };
+    reader.readAsBinaryString(file)
+
+  }
+
+  function encodeBinary(binary) {
+    return '\\x' + binary.split("")
+        .map(c => c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join("");
+  }
+
+  function bufferToHex(buffer) {
+    return Buffer.from(buffer.data).toString('hex')
+  }
+
+  function decodeBinary(binary) {
+    let hex = bufferToHex(binary)
+    console.log(hex)
+    let decoded = hex.split(/(\w\w)/g)
+        .filter(p => !!p)
+        .map(c => String.fromCharCode(parseInt(c, 16)))
+        .join("")
+    console.log(decoded)
+  }
+
+
+  function saveDecodedFile(decoded) {
+    let file = new Blob([decoded], {type: "application/octet-stream"});
+    console.log(file)
+    if (window.navigator.msSaveOrOpenBlob) {// IE10+
+      window.navigator.msSaveOrOpenBlob(file, "filename");
+    } else { // Others
+      var a = document.createElement("a"),
+          url = URL.createObjectURL(file);
+      a.href = url;
+      a.download = "filename";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    }
+  }
+
+  function loadBinaryFile() {
+    getBinaries().then(res => {
+      let binary = res.data[1].file
+      decodeBinary(binary)
+    })
+  }
+
   function openConfirmModal() {
     $('#confirmModal').addClass('is-active');
   }
@@ -136,7 +200,7 @@ function Home() {
             <input id='replayfile' type='file' accept='.hbr2' data-hook='replayfile' onChange={handleChange} />
           </div>
 
-          <div className='file-btn'>
+          <div className='file-btn2'>
             <label htmlFor='replayfile2'>
               <span style={{ float: 'left' }}>►</span>
               <span style={{ float: 'center' }}>Load MULTIPLE replay</span>
@@ -162,6 +226,21 @@ function Home() {
                   Calculate weights
                 </button>
               </div> : null}
+          { process.env.NODE_ENV === 'development' ?
+              <div className='file-btn'>
+                <label htmlFor='replayfile3'>
+                  <span style={{ float: 'left' }}>►</span>
+                  <span style={{ float: 'center' }}>Test binary post</span>
+                </label>
+                <input id='replayfile3' type='file' accept='.hbr2' data-hook='replayfile3' onChange={handleBinaryChange} />
+              </div> : null}
+          { process.env.NODE_ENV === 'development' ?
+              <div>
+                <button type="button" onClick={() => loadBinaryFile()}>
+                  Load Binary File
+                </button>
+              </div> : null
+          }
         </div>
       </div>
       <LoadingScreen />
@@ -327,7 +406,7 @@ function getPseuds(listOfNicks) {
     if (pseuds[nick] !== undefined) {
       listOfIds.push(pseuds[nick])
     } else {
-      //TODO notify if doestn exist in pseuds
+      //TODO notify if doesn't exist in pseuds
       console.log("Unrecognized player name")
       toastr.error("Unrecognized player name")
       homeInstance.openConfirmModal()
@@ -714,8 +793,4 @@ async function calculateWeights() {
       console.log(dbPlayers)
      })
   })
-
-
-  // for each combination of weights and variables, iterate through the data set, adjusting elo,
-  // and keep a count of how often the elo correctly predicted the actual result
 }
