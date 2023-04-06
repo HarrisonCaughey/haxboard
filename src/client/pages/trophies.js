@@ -3,7 +3,9 @@ import {Form} from "react-bootstrap";
 import {getGames, getPlayers} from "../services/api";
 import {DataGrid} from '@mui/x-data-grid';
 import {
+    Avatar,
     Box, Button,
+    Container,
     Card, CardContent,
     Divider,
     FormControl,
@@ -12,7 +14,7 @@ import {
     Grid,
     IconButton,
     MenuItem,
-    Select, Typography
+    Select, Stack, Tab, Tabs, Typography, Icon
 } from "@mui/material";
 import $ from "jquery";
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
@@ -21,6 +23,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import {GridNoResultsOverlay} from "@mui/x-data-grid/components/GridNoResultsOverlay";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { faCrown } from '@fortawesome/free-solid-svg-icons'
 
 
 export class Trophies extends React.Component {
@@ -29,10 +33,16 @@ export class Trophies extends React.Component {
         super(props);
         this.openConfirmModal = this.openConfirmModal.bind(this)
         this.getTeamNames = this.getTeamNames.bind(this)
+        this.getTeamNames2 = this.getTeamNames2.bind(this)
         this.setStartDate = this.setStartDate.bind(this)
         this.setEndDate = this.setEndDate.bind(this)
         this.calculateStats = this.calculateStats.bind(this)
         this.augmentPlayers = this.augmentPlayers.bind(this)
+        this.handleChange = this.handleChange.bind(this)
+        this.attachImages = this.attachImages.bind(this)
+        this.getSortedPlayers = this.getSortedPlayers.bind(this)
+        this.getWinLossRatio = this.getWinLossRatio.bind(this)
+        this.cleanTeams = this.cleanTeams.bind(this)
 
         this.state = {
             games: [],
@@ -49,9 +59,9 @@ export class Trophies extends React.Component {
                     sortable: true,
                     sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) => ({
-                            date: params.row.date,
-                            id: params.id
-                        }),
+                        date: params.row.date,
+                        id: params.id
+                    }),
                     valueFormatter: (params) => {
                         return params.value.date
                     },
@@ -75,7 +85,7 @@ export class Trophies extends React.Component {
                     headerName: 'Blue Team',
                     width: 200,
                     sortable: false,
-                     sortingOrder: ['desc', 'asc'],
+                    sortingOrder: ['desc', 'asc'],
                     valueGetter: (params) =>
                         `${this.getTeamNames(params.row.blue_team_names)}`,
                     cellClassName: (params) => {
@@ -86,7 +96,9 @@ export class Trophies extends React.Component {
                 { field: 'red_score', headerName: 'R', width: 20, sortable: false },
                 { field: 'blue_score', headerName: 'B', width: 20, sortable: false },
                 { field: 'blue_possession', headerName: 'B%', width: 40, sortable: true, sortingOrder: ['desc', 'asc'] },
-            ]
+            ],
+            selectedTab: 0,
+            doneComputing: false,
         }
     }
 
@@ -100,11 +112,11 @@ export class Trophies extends React.Component {
                     game.og_game_time = game.game_time
                     game.game_time = this.parseTime(game.game_time)
                     game.red_team_names = game.red_team.map((player) => player =
-                       this.state.players.filter(player1 => player1.id === player)[0].name
-                        )
+                        this.state.players.filter(player1 => player1.id === player)[0].name
+                    )
                     game.blue_team_names = game.blue_team.map((player) => player =
                         this.state.players.filter(player1 => player1.id === player)[0].name
-                        )
+                    )
                 })
                 let filteredGames = games.sort((g1, g2) => {
                     return (g1.id - g2.id)
@@ -112,6 +124,7 @@ export class Trophies extends React.Component {
                 this.setState({ games: games, filteredGames: filteredGames });
 
                 this.calculateStats()
+                this.attachImages()
                 console.log(this.state.players)
             })
         })
@@ -125,6 +138,13 @@ export class Trophies extends React.Component {
             names += member + ', '
         }
         return names.slice(0, -2)
+    }
+
+    getTeamNames2(team) {
+        let members = team.members.split('')
+        let player1 = this.state.players.filter(player => player.id === parseInt(members[0]))[0]
+        let player2 = this.state.players.filter(player => player.id === parseInt(members[1]))[0]
+        return `${player1.name} - ${player2.name}`
     }
 
     parseTime(gt) {
@@ -147,6 +167,14 @@ export class Trophies extends React.Component {
         this.setState({endDate: event})
     }
 
+    attachImages() {
+        let players = this.state.players
+        for (let player of players) {
+            player.image = `${player.name.toLowerCase()}.png`
+        }
+        this.setState({players: players})
+    }
+
     augmentPlayers() {
         let players = this.state.players
         for (let i = 0; i < players.length; i++) {
@@ -161,6 +189,18 @@ export class Trophies extends React.Component {
             player.max_first_place_streak = 0
             player.current_first_place_streak = 0
         }
+    }
+
+    getSortedPlayers(sortBy, desc) {
+        let players = this.state.players
+        let sortedPlayers = players.sort((g1, g2) => {
+            if (desc) {
+                return (g2[sortBy] - g1[sortBy])
+            } else {
+                return (g1[sortBy] - g2[sortBy])
+            }
+        })
+        return sortedPlayers
     }
 
     calculateStats() {
@@ -267,27 +307,301 @@ export class Trophies extends React.Component {
                     player.current_first_place_streak = 0
                 }
             }
-
         }
-        this.setState({teams: teams})
+        let arrayedTeams = this.cleanTeams(teams)
+        this.setState({teams: arrayedTeams, doneComputing: true})
+    }
+
+    cleanTeams(teams) {
+        let arrayedTeams = []
+        for (let key in teams) {
+            let team = teams[key]
+            team.wlr = this.getWinLossRatio(team.wins, team.total)
+            team.members = key
+            let members = team.members.split('')
+            let player1 = this.state.players.filter(player => player.id === parseInt(members[0]))[0]
+            let player2 = this.state.players.filter(player => player.id === parseInt(members[1]))[0]
+            team.memberNames = [player1.name, player2.name]
+            team.image1 = player1.image
+            team.image2 = player2.image
+            arrayedTeams.push(team)
+        }
+        arrayedTeams = arrayedTeams.sort((g1, g2) => {
+            return (g2.wlr - g1.wlr)
+        })
+        return arrayedTeams
+    }
+
+    getWinLossRatio(won, played) {
+        let wlr = 0
+        if (won !== 0) {
+            wlr = (100 * won) / (played)
+        }
+        return wlr.toFixed(2)
+    }
+
+    handleChange(e) {
+        console.log(e)
     }
 
     render() {
         return (
-            <div>
+            <div style={{paddingTop: 10}}>
                 <Box sx={{
-                    "& .MuiFormGroup-root":  { backgroundColor: "rgba(250, 250, 250, .3)" },
+                    paddingBottom: '5%',
+                    paddingLeft: '2%',
+                    paddingRight: '2%',
+                    "& .MuiGrid-item":  {
+                        backgroundColor: "rgba(250, 250, 250, .3)",
+                        margin: 5,
+                        boxShadow: 10,
+                        height: 660, overflow: 'auto', maxWidth: 240, minWidth: 240,
+                        textAlign: 'center'
+                    },
                 }}>
                     <FormGroup
                         sx={{
-                            p: 2,
-                            m: 5,
-                            boxShadow: 10,
-                            display: "flex"
+                            height: '100vh',
                         }}
                         row={true}
                     >
+                        <Grid container rowSpacing={1} columnSpacing={{ xs: 2, sm: 2, md: 3 }} columns={18}>
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={5} flexDirection="row">
+                                <Typography sx={{ fontSize: 16 }} color="text.primary" gutterBottom>
+                                    Current Elo
+                                </Typography>
+                                <Container
+                                    style={{ marginTop: 100,}}
+                                    className="container"
+                                    sx={{
+                                        padding: 2,
+                                        width: '200px',
+                                        height: 640, overflow: 'auto'
+                                    }}
+                                >
+                                    {this.state.doneComputing ? this.getSortedPlayers('elo', true).map((item, index) => (
+                                        <div key={index}>
+                                            <div
+                                                className="row"
+                                                style={{
+                                                    alignItems: "center",
+                                                    marginTop: 20,
+                                                    marginBottom: 0,
+                                                    justifyContent: "space-between"
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    style={{ alignItems: "center" }}
+                                                >
+                                                    <div style={{ color: "black" }}>{`${index +1}.`}</div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image}/>
+                                                    </div>
 
+                                                    <Stack>
+                                                        <div style={{ fontWeight: 500, color: "black" }}>{item.name}</div>
+                                                    </Stack>
+                                                </Stack>
+                                                <div style={{ color: "black" }}>{item.elo}</div>
+                                            </div>
+                                            <Divider />
+                                        </div>
+                                    )) : null}
+                                </Container>
+                            </Grid>
+
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3} flexDirection="row">
+                                <Typography sx={{ fontSize: 16 }} color="text.primary" gutterBottom>
+                                    Highest Ever Elo
+                                </Typography>
+                                <Container
+                                    style={{ marginTop: 100,}}
+                                    className="container"
+                                    sx={{
+                                        padding: 2,
+                                        width: '200px',
+                                        height: 640, overflow: 'auto'
+                                    }}
+                                >
+                                    {this.state.doneComputing ? this.getSortedPlayers('max_elo', true).map((item, index) => (
+                                        <div key={index}>
+                                            <div
+                                                className="row"
+                                                style={{
+                                                    alignItems: "center",
+                                                    marginTop: 20,
+                                                    marginBottom: 0,
+                                                    justifyContent: "space-between"
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    style={{ alignItems: "center" }}
+                                                >
+                                                    <div style={{ color: "black" }}>{`${index +1}.`}</div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image}/>
+                                                    </div>
+
+                                                    <Stack>
+                                                        <div style={{ fontWeight: 500, color: "black" }}>{item.name}</div>
+                                                    </Stack>
+                                                </Stack>
+                                                <div style={{ color: "black" }}>{item.max_elo}</div>
+                                            </div>
+                                            <Divider />
+                                        </div>
+                                    )) : null}
+                                </Container>
+                            </Grid>
+
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3} flexDirection="row">
+                                <Typography sx={{ fontSize: 16 }} color="text.primary" gutterBottom>
+                                    Highest Winning Streak
+                                </Typography>
+                                <Container
+                                    style={{ marginTop: 100,}}
+                                    className="container"
+                                    sx={{
+                                        padding: 2,
+                                        width: '200px',
+                                        height: 640, overflow: 'auto'
+                                    }}
+                                >
+                                    {this.state.doneComputing ? this.getSortedPlayers('winning_streak', true).map((item, index) => (
+                                        <div key={index}>
+                                            <div
+                                                className="row"
+                                                style={{
+                                                    alignItems: "center",
+                                                    marginTop: 20,
+                                                    marginBottom: 0,
+                                                    justifyContent: "space-between"
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    style={{ alignItems: "center" }}
+                                                >
+                                                    <div style={{ color: "black" }}>{`${index +1}.`}</div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image}/>
+                                                    </div>
+
+                                                    <Stack>
+                                                        <div style={{ fontWeight: 500, color: "black" }}>{item.name}</div>
+                                                    </Stack>
+                                                </Stack>
+                                                <div style={{ color: "black" }}>{item.winning_streak}</div>
+                                            </div>
+                                            <Divider />
+                                        </div>
+                                    )) : null}
+                                </Container>
+                            </Grid>
+
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3} flexDirection="row">
+                                <Typography sx={{ fontSize: 16 }} color="text.primary" gutterBottom>
+                                    #1 Elo Streak
+                                </Typography>
+                                <Container
+                                    style={{ marginTop: 100,}}
+                                    className="container"
+                                    sx={{
+                                        padding: 2,
+                                        width: '200px',
+                                        height: 640, overflow: 'auto'
+                                    }}
+                                >
+                                    {this.state.doneComputing ? this.getSortedPlayers('max_first_place_streak', true).map((item, index) => (
+                                        <div key={index}>
+                                            <div
+                                                className="row"
+                                                style={{
+                                                    alignItems: "center",
+                                                    marginTop: 20,
+                                                    marginBottom: 0,
+                                                    justifyContent: "space-between"
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    style={{ alignItems: "center" }}
+                                                >
+                                                    <div style={{ color: "black" }}>{`${index +1}.`}</div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image}/>
+                                                    </div>
+                                                    <Stack>
+                                                        <div style={{ fontWeight: 500, color: "black" }}>{item.name}</div>
+                                                    </Stack>
+                                                </Stack>
+                                                <div style={{ color: "black" }}>{item.max_first_place_streak}</div>
+                                            </div>
+                                            <Divider />
+                                        </div>
+                                    )) : null}
+                                </Container>
+                            </Grid>
+
+                            <Grid item={true} paddingRight={5} paddingLeft={5} xs={3} flexDirection="column">
+                                <Typography sx={{ fontSize: 16, paddingBottom: 40 }} color="text.primary" gutterBottom>
+                                    Top Teams
+                                </Typography>
+                                <Container
+                                    style={{ marginTop: 100,}}
+                                    className="container"
+                                    sx={{
+                                        padding: 2,
+                                        width: '200px',
+                                        height: 640, overflow: 'auto'
+                                    }}
+                                >
+                                    {this.state.doneComputing ? this.state.teams.map((item, index) => (
+                                        <div key={index}>
+                                            <div
+                                                className="row"
+                                                style={{
+                                                    alignItems: "center",
+                                                    marginTop: 20,
+                                                    marginBottom: 0,
+                                                    justifyContent: "space-between"
+                                                }}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    style={{ alignItems: "center" }}
+                                                >
+                                                    <div style={{ color: "black" }}>{`${index +1}.`}</div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image1}/>
+                                                    </div>
+                                                    <div>
+                                                        {index === 0 ? <FontAwesomeIcon icon={faCrown} style={{color: "#f8f135",}} /> : null }
+                                                        <Avatar src={item.image2}/>
+                                                    </div>
+                                                    <Stack>
+                                                    </Stack>
+                                                </Stack>
+                                                <div style={{ color: "black" }}>{`${item.wlr}%`}</div>
+                                            </div>
+                                            <Divider />
+                                        </div>
+                                    )) : null}
+                                </Container>
+                            </Grid>
+                        </Grid>
                     </FormGroup>
                 </Box>
             </div>

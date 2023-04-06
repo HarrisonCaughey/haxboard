@@ -3,17 +3,43 @@ import {getPlayers} from "../services/api";
 import {DataGrid, GridLoadingOverlay} from '@mui/x-data-grid';
 import {Form} from "react-bootstrap";
 import toastr from "toastr";
+import {Avatar} from "@mui/material";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCrown} from "@fortawesome/free-solid-svg-icons";
 
 
 export class PlayerStats extends React.Component {
 
     constructor(props) {
         super(props);
+
         this.state = {
             games: [],
             players: [],
             columns: [
-                { field: 'name', headerName: 'Name', width: 150, sortingOrder: ['desc', 'asc'] },
+                { field: 'avatar', headerName: '', width: 70, sortingOrder: ['desc', 'asc'],
+                    renderCell: (params, other) => {
+                        return (
+                            <>
+                                <div>
+                                {params.api.getRowIndex(params.row.id) === 0 ?
+                                    <FontAwesomeIcon icon={faCrown}
+                                                     style={{
+                                                         color: "#f8f135",
+                                                         paddingLeft: 12,
+                                                         paddingTop: 0,
+                                                         position: 'absolute',
+                                                         opacity: 1,
+                                                         zIndex: 1
+                                                     }} /> : null }
+                                    <Avatar src={`${params.row.name.toLowerCase()}.png`} />
+
+                                </div>
+                            </>
+                        );
+                    }
+                },
+                { field: 'name', headerName: 'Name', width: 130, sortingOrder: ['desc', 'asc'] },
                 { field: 'elo', headerName: 'Elo', width: 100, sortingOrder: ['desc', 'asc'] },
                 {
                     field: 'wlr',
