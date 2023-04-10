@@ -105,7 +105,7 @@ export class Trophies extends React.Component {
     componentDidMount() {
         getPlayers().then((players) => {
             this.setState({ players: players.data });
-            getGames().then(res => {
+            getGames().then(async res => {
                 let games = res.data
                 games.forEach((game) => {
                     game.date = game.date.slice(0, 10)
@@ -121,11 +121,10 @@ export class Trophies extends React.Component {
                 let filteredGames = games.sort((g1, g2) => {
                     return (g1.id - g2.id)
                 })
-                this.setState({ games: games, filteredGames: filteredGames });
+                this.setState({games: games, filteredGames: filteredGames});
 
-                this.calculateStats()
-                this.attachImages()
-                console.log(this.state.players)
+                this.calculateStats(filteredGames)
+                this.attachImages(this.state.players)
             })
         })
     }
@@ -167,8 +166,7 @@ export class Trophies extends React.Component {
         this.setState({endDate: event})
     }
 
-    attachImages() {
-        let players = this.state.players
+    attachImages(players) {
         for (let player of players) {
             player.image = `${player.name.toLowerCase()}.png`
         }
@@ -203,7 +201,7 @@ export class Trophies extends React.Component {
         return sortedPlayers
     }
 
-    calculateStats() {
+    calculateStats(games) {
         /*
         * Highest ever elo
         * Most games in #1 place (elo)
@@ -257,7 +255,7 @@ export class Trophies extends React.Component {
         }
 
         // Loop through all games, adding/subtracting elo from scratch to calculate stats
-        for (let game of this.state.filteredGames) {
+        for (let game of games) {
             let winners = game.red_score > game.blue_score ? game.red_team.sort() : game.blue_team.sort()
             let losers = game.red_score < game.blue_score ? game.red_team.sort() : game.blue_team.sort()
 

@@ -1,5 +1,6 @@
 const webpack = require("webpack")
 
+/* eslint-disable-next-line no-restricted-globals */
 module.exports = function override(config, env) {
     //do stuff with the webpack config...
     config.resolve.fallback = {
