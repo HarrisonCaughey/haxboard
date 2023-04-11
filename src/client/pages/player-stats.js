@@ -16,13 +16,14 @@ export class PlayerStats extends React.Component {
         this.state = {
             games: [],
             players: [],
+            winner: null,
             columns: [
                 { field: 'avatar', headerName: '', width: 70, sortingOrder: ['desc', 'asc'],
                     renderCell: (params, other) => {
                         return (
                             <>
                                 <div>
-                                {params.api.getRowIndex(params.row.id) === 0 ?
+                                {this.state.winner ? params.row.id === this.state.winner ?
                                     <FontAwesomeIcon icon={faCrown}
                                                      style={{
                                                          color: "#f8f135",
@@ -31,7 +32,7 @@ export class PlayerStats extends React.Component {
                                                          position: 'absolute',
                                                          opacity: 1,
                                                          zIndex: 1
-                                                     }} /> : null }
+                                                     }} /> : null : null }
                                     <Avatar src={`${params.row.name.toLowerCase()}.png`} />
 
                                 </div>
@@ -67,6 +68,10 @@ export class PlayerStats extends React.Component {
     componentDidMount() {
         getPlayers().then((res) => {
             this.setState({ players: res.data });
+            let winningPlayer = res.data.sort((g1, g2) => {
+                return (g2.elo - g1.elo)
+            })[0]
+            this.setState({winner: winningPlayer.id})
         }).catch((err) => {
             toastr.error("Server error when getting player stats")
         })

@@ -307,8 +307,6 @@ export class Trophies extends React.Component {
             }
         }
         let arrayedTeams = this.cleanTeams(teams, players)
-        console.log((JSON.parse(JSON.stringify(teams))))
-        console.log((JSON.parse(JSON.stringify(players))))
         this.setState({teams: arrayedTeams, doneComputing: true})
     }
 
