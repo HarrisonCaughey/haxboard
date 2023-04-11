@@ -123,7 +123,7 @@ export class Trophies extends React.Component {
                 })
                 this.setState({games: games, filteredGames: filteredGames});
 
-                this.calculateStats(filteredGames)
+                this.calculateStats(filteredGames, this.state.players)
                 this.attachImages(this.state.players)
             })
         })
@@ -173,8 +173,7 @@ export class Trophies extends React.Component {
         this.setState({players: players})
     }
 
-    augmentPlayers() {
-        let players = this.state.players
+    augmentPlayers(players) {
         for (let i = 0; i < players.length; i++) {
             let player = players[i]
             player.max_elo = 1000
@@ -187,6 +186,7 @@ export class Trophies extends React.Component {
             player.max_first_place_streak = 0
             player.current_first_place_streak = 0
         }
+        return players
     }
 
     getSortedPlayers(sortBy, desc) {
@@ -201,7 +201,7 @@ export class Trophies extends React.Component {
         return sortedPlayers
     }
 
-    calculateStats(games) {
+    calculateStats(games, players) {
         /*
         * Highest ever elo
         * Most games in #1 place (elo)
@@ -210,7 +210,7 @@ export class Trophies extends React.Component {
         * Best kick/goal ratio
         * Highest win/rate teams
          */
-        this.augmentPlayers()
+        players = this.augmentPlayers(players)
         let teams = {
             "12" : {
                 wins: 0,
@@ -268,7 +268,7 @@ export class Trophies extends React.Component {
             }
 
             for (let i = 0; i < winners.length; i++) {
-                let winner = this.state.players.filter(player => player.id === winners[i])[0]
+                let winner = players.filter(player => player.id === winners[i])[0]
                 winner.elo += game.elo_change[i]
                 winner.current_losing_streak = 0
                 winner.current_winning_streak += 1
@@ -281,7 +281,7 @@ export class Trophies extends React.Component {
 
             }
             for (let i = 0; i < losers.length; i++) {
-                let loser = this.state.players.filter(player => player.id === losers[i])[0]
+                let loser = players.filter(player => player.id === losers[i])[0]
                 loser.elo -= game.elo_change[i + game.elo_change.length / 2]
                 loser.current_winning_streak = 0
                 loser.current_losing_streak += 1
@@ -292,10 +292,10 @@ export class Trophies extends React.Component {
                     loser.lowest_elo = loser.elo
                 }
             }
-            let maxElo = Math.max(...this.state.players.map(player => player.elo))
+            let maxElo = Math.max(...players.map(player => player.elo))
 
-            for (let i = 0; i < this.state.players.length; i++) {
-                let player = this.state.players[i]
+            for (let i = 0; i < players.length; i++) {
+                let player = players[i]
                 if (player.elo === maxElo) {
                     player.current_first_place_streak += 1
                     if (player.current_first_place_streak > player.max_first_place_streak) {
@@ -306,20 +306,21 @@ export class Trophies extends React.Component {
                 }
             }
         }
-        let arrayedTeams = this.cleanTeams(teams)
+        let arrayedTeams = this.cleanTeams(teams, players)
         console.log((JSON.parse(JSON.stringify(teams))))
+        console.log((JSON.parse(JSON.stringify(players))))
         this.setState({teams: arrayedTeams, doneComputing: true})
     }
 
-    cleanTeams(teams) {
+    cleanTeams(teams, players) {
         let arrayedTeams = []
         for (let key in teams) {
             let team = teams[key]
             team.wlr = this.getWinLossRatio(team.wins, team.total)
             team.members = key
             let members = team.members.split('')
-            let player1 = this.state.players.filter(player => player.id === parseInt(members[0]))[0]
-            let player2 = this.state.players.filter(player => player.id === parseInt(members[1]))[0]
+            let player1 = players.filter(player => player.id === parseInt(members[0]))[0]
+            let player2 = players.filter(player => player.id === parseInt(members[1]))[0]
             team.memberNames = [player1.name, player2.name]
             team.image1 = player1.image
             team.image2 = player2.image
