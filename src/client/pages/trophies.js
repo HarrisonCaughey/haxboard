@@ -103,8 +103,9 @@ export class Trophies extends React.Component {
     }
 
     componentDidMount() {
-        getPlayers().then((players) => {
-            this.setState({ players: players.data });
+        getPlayers().then((res) => {
+            let players = res.data
+            this.setState({ players: players });
             getGames().then(async res => {
                 let games = res.data
                 games.forEach((game) => {
@@ -112,19 +113,18 @@ export class Trophies extends React.Component {
                     game.og_game_time = game.game_time
                     game.game_time = this.parseTime(game.game_time)
                     game.red_team_names = game.red_team.map((player) => player =
-                        this.state.players.filter(player1 => player1.id === player)[0].name
+                        players.filter(player1 => player1.id === player)[0].name
                     )
                     game.blue_team_names = game.blue_team.map((player) => player =
-                        this.state.players.filter(player1 => player1.id === player)[0].name
+                        players.filter(player1 => player1.id === player)[0].name
                     )
                 })
                 let filteredGames = games.sort((g1, g2) => {
                     return (g1.id - g2.id)
                 })
-                this.setState({games: games, filteredGames: filteredGames});
-
-                this.calculateStats(filteredGames, this.state.players)
-                this.attachImages(this.state.players)
+                players = this.attachImages(players)
+                this.calculateStats(filteredGames, players)
+                this.setState({games: games, filteredGames: filteredGames, players: players});
             })
         })
     }
@@ -170,7 +170,7 @@ export class Trophies extends React.Component {
         for (let player of players) {
             player.image = `${player.name.toLowerCase()}.png`
         }
-        this.setState({players: players})
+        return players
     }
 
     augmentPlayers(players) {
