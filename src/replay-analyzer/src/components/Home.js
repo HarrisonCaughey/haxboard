@@ -724,7 +724,7 @@ function augmentGame(gameStats, game) {
 
 async function calculateWeights() {
 
-  let possibleWeights = [-2.5, -1.27, 4.7, 3, -0.69, -3.5, -3, -2, -1.5, -1, 0, 0.5, 1, 1.5, 2, 2.5, 3.5, 4]
+  let possibleWeights = [ -2, 1.5, 0, 1, -2.5, -1.27, 4.7, 3, -0.69, -3.5, -3, -1.5, -1, 0.5, 2, 2.5, 3.5, 4]
 
   // get games and player-game-stats for each of those games
   console.log("Calculate weights")
@@ -776,16 +776,16 @@ async function calculateWeights() {
       }
 
       // TODO - use this at line 293 when model is finalized
-      let weights = {
-                    kicks: -2,
-                    possession: 1.5,
-                    passes: 0,
-                    shots_on_goal: 1,
-                    own_goals: -0.69
-                  }
-                for (const game of res.data) {
-                  eloAlgorithm(game, weights)
-                }
+      // let weights = {
+      //               kicks: -2,
+      //               possession: 1.5,
+      //               passes: 0,
+      //               shots_on_goal: 1,
+      //               own_goals: -0.69
+      //             }
+      //           for (const game of res.data) {
+      //             eloAlgorithm(game, weights)
+      //           }
 
 
       console.log(`Most predicted = ${mostPredicted}`)

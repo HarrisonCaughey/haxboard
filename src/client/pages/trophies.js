@@ -124,6 +124,7 @@ export class Trophies extends React.Component {
                 })
                 players = this.attachImages(players)
                 this.calculateStats(filteredGames, players)
+                console.log(players)
                 this.setState({games: games, filteredGames: filteredGames, players: players});
             })
         })
